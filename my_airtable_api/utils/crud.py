@@ -3,6 +3,16 @@ from mission.models import Client, Vehicule, Intervention, Mission, MissionInter
 from my_airtable_api.utils.extract_data import ValidationError
 
 def create_client(data, erreurs):
+    """Crée un client à partir des données fournies.
+    Args:
+        data (dict): Les données du client à créer
+        erreurs (dict): Un dictionnaire pour stocker les erreurs de validation
+    Returns:
+        Client: L'objet client créé
+    Raises:
+        ValidationError: Si des erreurs de validation sont détectées dans les données
+    """
+    
     try:
         # Vérification client déjà existant
         if 'email' in data:
@@ -75,6 +85,61 @@ def create_mission_interventions(mission_interventions, erreurs):
     except Exception as e:
         logging.error(f"Error creating mission interventions: {e}")
         raise
+
+def update_client(data):
+    try:
+        if isinstance(data, Client):
+            client = data
+        elif 'id' in data:
+            client = Client.objects.get(id=data['id'])
+            for key, value in data.items():
+                setattr(client, key, value)
+        else:
+            logging.error("ID client manquant pour la mise à jour")
+            raise ValidationError("ID client manquant pour la mise à jour")
+
+        client.save()
+        logging.info(f"Client updated: {client}")
+        return client
+
+    except Client.DoesNotExist:
+        logging.error(f"Client with id {data.get('id')} does not exist.")
+        raise ValidationError(f"Client with id {data.get('id')} does not exist.")
+    except Exception as e:
+        logging.error(f"Error updating client: {e}")
+        raise
+
+    
+# def update_mission(mission_id, data):
+#     try:
+#         mission = Mission.objects.get(id=mission_id)
+#         for key, value in data.items():
+#             setattr(mission, key, value)
+#         mission.save()
+#         logging.info(f"Mission updated: {mission.id}")
+#         return mission
+#     except Mission.DoesNotExist:
+#         logging.error(f"Mission with id {mission_id} does not exist.")
+#         raise ValidationError(f"Mission with id {mission_id} does not exist.")
+#     except Exception as e:
+#         logging.error(f"Error updating mission: {e}")
+#         raise
+
+# def update_mission_interventions(mission_id, interventions_data):
+#     try:
+#         mission = Mission.objects.get(id=mission_id)
+#         mission_interventions = MissionIntervention.objects.filter(mission=mission)
+#         mission_interventions.delete()  # Supprimer les anciennes interventions
+#         for data in interventions_data:
+#             data['mission'] = mission
+#             MissionIntervention.objects.create(**data)
+#         logging.info(f"Mission interventions updated for mission {mission.id}")
+#     except Mission.DoesNotExist:
+#         logging.error(f"Mission with id {mission_id} does not exist.")
+#         raise ValidationError(f"Mission with id {mission_id} does not exist.")
+#     except Exception as e:
+#         logging.error(f"Error updating mission interventions: {e}")
+#         raise
     
 def intervention_get_by_id(intervention_id):
     try:
@@ -94,10 +159,17 @@ def get_client_by_id(client_id):
     
 def get_vehicule_by_id(vehicule_id):
     try:
-        logging.info(f"Recherche du véhicule avec id={vehicule_id}")
         vehicule = Vehicule.objects.get(id=vehicule_id)
-        logging.info(f"Vehicle found: {vehicule}")
         return vehicule
     except Vehicule.DoesNotExist:
         logging.error(f"Vehicle with id {vehicule_id} does not exist.")
+        return None
+    
+def get_mission_intervention_by_id(mission_id):
+    try:
+        mission = MissionIntervention.objects.get(id=mission_id)
+        logging.info(f"Mission intervention found: {mission}")
+        return mission
+    except MissionIntervention.DoesNotExist:
+        logging.error(f"Mission intervention with id {mission_id} does not exist.")
         return None

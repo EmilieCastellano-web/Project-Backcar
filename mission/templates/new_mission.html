@@ -110,6 +110,7 @@
 
         <label for="priorite">Priorité :</label>
         <select id="priorite" name="priorite" required>
+            <option value="">-- Choisis une priorité --</option>
             {% for name, label in priorites %}
                 <option value="{{ name }}">{{ label }}</option>
             {% endfor %}
@@ -118,6 +119,7 @@
         <textarea id="remarque_mission" name="remarque_mission" rows="4" cols="50"></textarea>
         <label for="taux">Taux :</label>
         <select id="taux" name="taux" required>
+            <option value="">-- Choisis un taux --</option>
             {% for name, label in taux %}
                 <option value="{{ name }}">{{ label }}</option>
             {% endfor %}

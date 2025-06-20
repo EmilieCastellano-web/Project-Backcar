@@ -9,39 +9,84 @@ class ValidationError(Exception):
         self.details = details or {}
         super().__init__(message)     
 
-def extract_data_client(request, erreurs): 
-    client_id = request.POST.get('client')
+def extract_data_client(request, erreurs, client=None): 
+    mode = ""
+    if '/new/' in request.path:
+        mode = "create"
+    elif '/update/' in request.path:
+        mode = "update"
     
-    if client_id:
-        return {'id': client_id}
-
-    client = {
-        'nom': request.POST.get('nom', "").strip(),
-        'prenom': request.POST.get('prenom', "").strip(),
-        'email': request.POST.get('email', "").strip(),
-        'societe': request.POST.get('societe', "").strip(),
-        'telephone': request.POST.get('telephone', "").strip(),
-        'adresse': request.POST.get('adresse', "").strip(),
-        'code_postal': request.POST.get('code_postal', "").strip(),
-        'ville': request.POST.get('ville', "").strip()
-    }
-    if not client['nom']:
-        erreurs['client']['nom'] = "Le nom est requis"
-    if not client['email'] or "@" not in client['email']:
-        erreurs['client']['email'] = "L'adresse email est invalide"
-    if not client['telephone'] or len(client['telephone']) != 10:
-        erreurs['client']['telephone'] = "Le numéro de téléphone doit comporter 10 chiffres"
-    if not client['code_postal'] or len(client['code_postal']) != 5:
-        erreurs['client']['code_postal'] = "Le code postal doit comporter 5 chiffres"
-    if not client['ville']:
-        erreurs['client']['ville'] = "La ville est requise"
-
-    if erreurs['client']: 
+    client_id = request.POST.get('client')
+    # logging.info(f"Client ID: {client_id}")
+    
+    if mode == "update" and not client_id:
+        erreurs['client']['id'] = "L'identifiant du client est requis pour une mise à jour"
         raise ValidationError("Erreur(s) dans le formulaire", details=erreurs)
+    
+    if mode == "create":    
+        if client_id:
+            return {'id': client_id}
 
+        client = {
+            'nom': request.POST.get('nom', "").strip(),
+            'prenom': request.POST.get('prenom', "").strip(),
+            'email': request.POST.get('email', "").strip(),
+            'societe': request.POST.get('societe', "").strip(),
+            'telephone': request.POST.get('telephone', "").strip(),
+            'adresse': request.POST.get('adresse', "").strip(),
+            'code_postal': request.POST.get('code_postal', "").strip(),
+            'ville': request.POST.get('ville', "").strip()
+        }
+        if not client['nom']:
+            erreurs['client']['nom'] = "Le nom est requis"
+        if not client['email'] or "@" not in client['email']:
+            erreurs['client']['email'] = "L'adresse email est invalide"
+        if not client['telephone'] or len(client['telephone']) != 10:
+            erreurs['client']['telephone'] = "Le numéro de téléphone doit comporter 10 chiffres"
+        if not client['code_postal'] or len(client['code_postal']) != 5:
+            erreurs['client']['code_postal'] = "Le code postal doit comporter 5 chiffres"
+        if not client['ville']:
+            erreurs['client']['ville'] = "La ville est requise"
+
+        if erreurs['client']: 
+            raise ValidationError("Erreur(s) dans le formulaire", details=erreurs)
+        
+    if mode == "update": #TODOO ENLEVER ET REMETTRE LES GUILLEMETS VIDES
+        client = {
+            'nom': request.POST.get('nom', client.nom).strip(),
+            'prenom': request.POST.get('prenom', client.prenom).strip(),
+            'email': request.POST.get('email', client.email).strip(),
+            'societe': request.POST.get('societe', client.societe).strip(),
+            'telephone': request.POST.get('telephone', client.telephone).strip(),
+            'adresse': request.POST.get('adresse', client.adresse).strip(),
+            'code_postal': request.POST.get('code_postal', client.code_postal).strip(),
+            'ville': request.POST.get('ville', client.ville).strip()
+        }
+        
+        if not client['email'] or "@" not in client['email']:
+            erreurs['client']['email'] = "L'adresse email est invalide"
+        if not client['telephone'] or len(client['telephone']) != 10:
+            erreurs['client']['telephone'] = "Le numéro de téléphone doit comporter 10 chiffres"
+        if not client['code_postal'] or len(client['code_postal']) != 5:
+            erreurs['client']['code_postal'] = "Le code postal doit comporter 5 chiffres"
+        if erreurs['client']:
+            raise ValidationError("Erreur(s) dans le formulaire", details=erreurs)   
     return client
     
 def extract_data_vehicule(request, client, erreurs):
+    """
+    Extrait les données d'un véhicule à partir d'une requête HTTP POST.
+    Cette fonction recueille les informations nécessaires pour créer ou mettre à jour un véhicule,
+    en vérifiant la validité des données fournies.
+    Args:
+        request: La requête HTTP contenant les données POST du formulaire
+        client: L'objet client auquel le véhicule est associé
+        erreurs: Un dictionnaire pour stocker les erreurs de validation
+    Returns:
+        dict: Un dictionnaire contenant les données du véhicule
+    Raises:
+        ValidationError: Si des erreurs de validation sont détectées dans les données
+    """
     vehicule_id = request.POST.get('vehicule')
     if vehicule_id:
         return {'id': vehicule_id}
@@ -85,6 +130,18 @@ def extract_data_vehicule(request, client, erreurs):
     return vehicule
     
 def extract_data_intervention(request, erreurs):
+    """
+    Extrait les données des interventions à partir d'une requête HTTP POST.
+    Cette fonction recueille les informations nécessaires pour créer ou mettre à jour des interventions,
+    en vérifiant la validité des données fournies.
+    Args:
+        request: La requête HTTP contenant les données POST du formulaire
+        erreurs: Un dictionnaire pour stocker les erreurs de validation
+    Returns:
+        list: Une liste d'objets Intervention extraits des données POST
+    Raises:
+        ValidationError: Si des erreurs de validation sont détectées dans les données
+    """
     from .crud import intervention_get_by_id
 
     interventions_list = []  # initialisation avant la boucle
@@ -106,7 +163,19 @@ def extract_data_intervention(request, erreurs):
     return interventions_list
 
 def extract_data_mission(request, vehicule):
+    """
+    Extrait les données d'une mission à partir d'une requête HTTP POST et d'un véhicule.
     
+    Cette fonction recueille les informations nécessaires pour créer ou mettre à jour une mission,
+    en combinant les données du formulaire POST avec les informations du véhicule associé.
+    
+    Args:
+        request: La requête HTTP contenant les données POST du formulaire
+        vehicule: L'objet véhicule associé à la mission
+        
+    Returns:
+        dict: Un dictionnaire contenant les données de la mission
+    """
     mission = {
         'remarque': request.POST.get('remarque_mission'),
         'priorite': request.POST.get('priorite'),
@@ -116,6 +185,20 @@ def extract_data_mission(request, vehicule):
     return mission
 
 def extract_data_mission_intervention(request, mission, interventions, erreurs):
+    """
+    Extrait les données des interventions associées à une mission à partir d'une requête HTTP POST.
+    Cette fonction recueille les informations nécessaires pour créer ou mettre à jour les interventions
+    liées à une mission, en vérifiant la validité des données fournies.
+    Args:
+        request: La requête HTTP contenant les données POST du formulaire
+        mission: L'objet mission auquel les interventions sont associées
+        interventions: La liste des interventions sélectionnées pour la mission
+        erreurs: Un dictionnaire pour stocker les erreurs de validation
+    Returns:
+        list: Une liste de dictionnaires contenant les données des interventions associées à la mission
+    Raises:
+        ValidationError: Si des erreurs de validation sont détectées dans les données
+    """
     mission_interventions = []
     cout_total = 0.0  
     for intervention in interventions:

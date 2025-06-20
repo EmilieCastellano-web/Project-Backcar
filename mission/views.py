@@ -5,11 +5,17 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(message)s')
 from django.db import transaction
 
-from my_airtable_api.utils.crud import create_client, create_vehicule, create_mission, get_client_by_id, get_vehicule_by_id
+from my_airtable_api.utils.crud import create_client, create_vehicule, create_mission, get_client_by_id, get_vehicule_by_id, get_mission_intervention_by_id, update_client
 from my_airtable_api.utils.extract_data import ValidationError, extract_data_client, extract_data_vehicule, extract_data_intervention, extract_data_mission, extract_data_mission_intervention
 
+
 def list_view(request):
-    # Récupération de la table pivot # MissionIntervention avec les relations nécessaires
+    """"Affiche la liste des missions, véhicules et clients.
+    Cette vue récupère les données des missions, véhicules et clients depuis la base de données
+    et les organise pour les afficher dans un template.
+    Returns:
+        HttpResponse: La réponse HTTP contenant le rendu du template avec les données des missions, véhicules et clients.
+    """
     missions_interventions = MissionIntervention.objects.select_related(
         'mission', 'mission__vehicule', 'mission__client', 'intervention'
     ).all()
@@ -21,6 +27,7 @@ def list_view(request):
         if mission_id not in missions_group:
             missions_group[mission_id] = {
                 'id': mission.id,
+                'id_mission_intervention': mi.id,
                 'date_demande': mission.date_demande,
                 'remarque': mission.remarque,
                 'priorite': mission.priorite.replace('_', ' ').title(),
@@ -99,6 +106,16 @@ def list_view(request):
         }) 
     
 def mission_form_view(request):
+    """Affiche le formulaire de création d'une nouvelle mission.
+    Cette vue gère l'affichage du formulaire pour créer une nouvelle mission.
+    Si la requête est de type POST, elle traite les données du formulaire.
+    Args:
+        request: La requête HTTP contenant les données du formulaire
+    Returns:
+        HttpResponse: La réponse HTTP contenant le rendu du template du formulaire de mission
+    Raises:
+        ValidationError: Si des erreurs de validation sont détectées dans les données du formulaire
+    """
     if request.method == 'POST':
         erreurs = {
             'client': {},
@@ -157,36 +174,74 @@ def mission_form_view(request):
         })
 
 def update_mission_view(request, id):
-    try:
-        mission = MissionIntervention.objects.get(id=id)
-        if request.method == 'POST':
-            erreurs = {
-                'mission': {}
-            }
+    """Affiche le formulaire de mise à jour d'une mission existante.
+    Cette vue gère l'affichage du formulaire pour mettre à jour une mission existante.
+    Si la requête est de type POST, elle traite les données du formulaire.
+    Args:
+        request: La requête HTTP contenant les données du formulaire
+        id: L'identifiant de la mission à mettre à jour
+    Returns:
+        HttpResponse: La réponse HTTP contenant le rendu du template du formulaire de mise à jour de la mission
+    Raises:
+        ValidationError: Si des erreurs de validation sont détectées dans les données du formulaire
+    """
+    erreurs = {
+        'client': {},
+        'vehicule': {},
+        'mission': {},
+        'intervention': {}
+    }
+    mission = get_mission_intervention_by_id(id)
+    if not mission:
+        logging.error(f"Mission with id {id} does not exist.")
+        return render(request, 'error.html', {'error': 'Mission not found'})
+
+    mission_intervention = {
+            'id': mission.mission.id,
+            'id_mission_intervention': mission.id,
+            'date_demande': mission.mission.date_demande,
+            'remarque': mission.mission.remarque,
+            'priorite': mission.mission.priorite.replace('_', ' ').title(),
+            'taux': mission.taux.title(),
+            'vehicule': mission.mission.vehicule,
+            'client': mission.mission.client,
+            'cout_total': mission.cout_total,
+            'list_interventions': [
+                {
+                    'id': mission.intervention.id,
+                    'libelle': mission.intervention.libelle
+                }
+            ]
+        }
+    # logging.info(f"Mission to update: {mission_intervention}")
+    # logging.info(request.method)
+    if request.method == 'POST':
+        # logging.info(f"UPDATING mission with id {id}")
+        with transaction.atomic():
             try:
-                with transaction.atomic():
-                    mission_data = extract_data_mission(request, mission.vehicule)
-                    interventions = extract_data_mission_intervention(request, mission_data, mission.interventions.all(), erreurs)
-                    # Update the mission and its interventions
-                    mission.update(mission_data, interventions, erreurs)
-                    return redirect('list_view')
+                client = mission.mission.client
+                client = extract_data_client(request, erreurs, client=client)
+                client = update_client(client)
+                return redirect('list_view')
             except ValidationError as ve:
                 logging.error(f"Validation error: {ve.message}")
-                return render(request, 'edit_mission.html', {
-                    'mission': mission,
+                return render(request, 'update_mission.html', {
                     'erreurs': erreurs,
                     'valeurs': request.POST.dict(),
+                    'mission': mission_intervention,
                     'interventions': Intervention.objects.all(),
                     'priorites': [(choix.name, choix.value) for choix in Priorite],
                     'taux': [(choix.name, choix.value) for choix in Taux]
                 })
-        else:
-            return render(request, 'edit_mission.html', {
-                'mission': mission,
-                'interventions': Intervention.objects.all(),
-                'priorites': [(choix.name, choix.value) for choix in Priorite],
-                'taux': [(choix.name, choix.value) for choix in Taux]
-            })
-    except MissionIntervention.DoesNotExist:
-        logging.error(f"Mission with id {id} does not exist.")
-        return render(request, 'error.html', {'error': "Mission not found."})
+            except Exception as e:
+                logging.error(f"Error updating client: {e}")
+                return render(request, 'error.html', {'error': str(e), 'client': client})
+            
+    else:
+        # logging.info(f"RENDERING update form for mission with id {id}")
+        return render(request, 'update_mission.html', {
+            'mission': mission_intervention,
+            'interventions': Intervention.objects.all(),
+            'priorites': [(choix.name, choix.value) for choix in Priorite],
+            'taux': [(choix.name, choix.value) for choix in Taux]
+        })
