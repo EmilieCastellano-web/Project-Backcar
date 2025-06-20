@@ -1,0 +1,91 @@
+<!Doctype html>
+<html lang="en-US">
+<head>
+    <meta charset="utf-8" />
+    <title>Modifier Mission</title>
+</head>
+<body>
+    <form method="post" action="{% url 'edit_mission' mission.id %}">
+        {% csrf_token %}
+        <h2>Modifier le client</h2>
+
+        {% if erreurs.client %}
+            {% for champ, message in erreurs.client.items %}
+                <p style="color:red;">{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+
+        <label for="nom">Nom:</label>
+        <input type="text" id="nom" name="nom" value="{{ valeurs.nom|default_if_none:'' }}">
+        <label for="societe">Société:</label>
+        <input type="text" id="societe" name="societe" value="{{ valeurs.societe|default_if_none:'' }}">
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" value="{{ valeurs.email|default_if_none:'' }}">
+        <label for="telephone">Téléphone:</label>
+        <input type="text" id="telephone" name="telephone" value="{{ valeurs.telephone|default_if_none:'' }}">
+        <label for="adresse">Adresse:</label>
+        <input type="text" id="adresse" name="adresse" value="{{ valeurs.adresse|default_if_none:'' }}">
+        <label for="code_postal">Code Postal:</label>
+        <input type="text" id="code_postal" name="code_postal" value="{{ valeurs.code_postal|default_if_none:'' }}">
+        <label for="ville">Ville:</label>
+        <input type="text" id="ville" name="ville" value="{{ valeurs.ville|default_if_none:'' }}">
+        
+        <h2>Modifier le véhicule</h2>
+
+        {% if erreurs.vehicule %}
+            {% for champ, message in erreurs.vehicule.items %}
+                <p style="color:red;">{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+
+        <label for="kilometrage">Kilométrage:</label>
+        <input type="number" id="kilometrage" name="kilometrage" value="{{ valeurs.kilometrage|default_if_none:'' }}">
+        <label for="remarque_vehicule">Remarque:</label>
+        <textarea id="remarque_vehicule" name="remarque_vehicule" rows="4" cols="50"></textarea>
+        
+        <h2>Modifier les interventions</h2>
+
+        {% if erreurs.interventions %}
+            {% for champ, message in erreurs.interventions.items %}
+                <p style="color:red;">{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+
+        <label for="intervention">Intervention :</label>
+        <select id="intervention-select">
+            <option value="">-- Choisis une intervention --</option>
+            {% for intervention in interventions %}
+                <option value="{{ intervention.id }}">{{ intervention.libelle }}</option>
+            {% endfor %}
+        </select>
+
+        <ul id="intervention-list"></ul>
+        <input type="hidden" name="interventions" id="interventions-hidden" value="">
+
+        <h2>Modifier la mission</h2>
+
+        {% if erreurs.mission %}
+            {% for champ, message in erreurs.mission.items %}
+                <p style="color:red;">{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+
+        <label for="priorite">Priorité :</label>
+        <select id="priorite" name="priorite" required>
+            {% for name, label in priorites %}
+                <option value="{{ name }}">{{ label }}</option>
+            {% endfor %}
+        </select>
+        <label for="_mission">Remarque :</label>
+        <textarea id="remarque_mission" name="remarque_mission" rows="4" cols="50"></textarea>
+        <label for="taux">Taux :</label>
+        <select id="taux" name="taux" required>
+            {% for name, label in taux %}
+                <option value="{{ name }}">{{ label }}</option>
+            {% endfor %}
+        </select> 
+
+        <button type="submit">Enregistrer les modifications</button>
+    </form>
+</body>
+</html>

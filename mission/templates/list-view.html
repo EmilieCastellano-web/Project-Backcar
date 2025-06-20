@@ -1,0 +1,136 @@
+{% load static %}
+<!doctype html>
+<html lang="en-US">
+<head>
+    <meta charset="utf-8" />
+    <title>Liste des Missions</title>
+</head>
+<body>
+
+    <label>Liste des Missions Interventions</label>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID Mission</th>
+                <th>Véhicule</th>
+                <th>Client</th>
+                <th>Priorité</th>
+                <th>Date Demande</th>
+                <th>Taux</th>
+                <th>Cout total</th>
+                <th>Remarque</th>
+                <th>Libellé Intervention</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for mission in missions %}
+            <tr>
+                <td>{{ mission.id }}</td>
+                <td>{{ mission.vehicule }}</td>
+                <td>{{ mission.client }}</td>
+                <td>{{ mission.priorite }}</td>
+                <td>{{ mission.date_demande|date:"d/m/Y" }}</td>
+                <td>{{mission.taux}}</td>
+                <td>{{ mission.cout_total}}</td>
+                <td>{{ mission.remarque }}</td>
+                <td>
+                    {% for intervention in mission.interventions %}
+                        {{ intervention.libelle }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %} 
+                </td>
+                <td>
+                    <a href="{% url 'edit_mission' mission.id %}">Modifier</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br><br>
+
+    <label>Liste des Véhicules</label>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID Véhicule</th>
+                <th>Marque</th>
+                <th>Modèle</th>
+                <th>Immatriculation</th>
+                <th>Numéro de série</th>
+                <th>Date de mise en circulation</th>
+                <th>Kilométrage</th>
+                <th>Remarque</th>
+                <th>VO</th>
+                <th>Boîte de vitesses</th>
+                <th>Carburant</th>
+                <th>Client</th>
+                <th>Libellé Intervention</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for vehicule in vehicules %}
+            <tr>
+
+                <td>{{ vehicule.id }}</td>
+                <td>{{vehicule.marque }}</td>
+                <td>{{vehicule.modele }}</td>
+                <td>{{vehicule.immatriculation }}</td>
+                <td>{{vehicule.numero_serie}}</td>
+                <td>{{vehicule.mise_circulation|date:"d/m/Y"|default:"Non Renseignée"}}</td>
+                <td>{{vehicule.kilometrage|default:"Non Renseigné"}}</td>
+                <td>{{vehicule.remarque}}</td>
+                <td>{{vehicule.vo|yesno:"Oui, Non"}}</td>
+                <td>{{vehicule.boite_vitesse}}</td>
+                <td>{{vehicule.carburant}}</td>
+                <td>{{vehicule.client}}</td>
+                <td>
+                    {% for mi in vehicule.missions %}
+                        {% for intervention in mi.interventions %}
+                            {{ intervention.libelle }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br><br>
+
+    <label>Liste des Clients</label>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Email</th>
+                <th>Téléphone</th>
+                <th>Adresse</th>
+                <th>Code Postal</th>
+                <th>Ville</th>
+                <th>Véhicules</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for client in clients %}
+            <tr>
+                <td>{{ client.nom }}</td>
+                <td>{{ client.prenom }}</td>
+                <td>{{ client.email }}</td>
+                <td>{{ client.telephone }}</td>
+                <td>{{ client.adresse }}</td>
+                <td>{{ client.code_postal }}</td>
+                <td>{{ client.ville }}</td>
+                <td>
+                    {% for vehicule in client.vehicules %}
+                        {{ vehicule.marque }} {{ vehicule.modele }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br><br>
+    <a href="{% url 'post_mission' %}">Créer une mission</a>
+</body>
+<script src="{% static 'js/form_mission.js' %}"></script>
+</html>
