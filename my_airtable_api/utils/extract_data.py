@@ -28,13 +28,16 @@ def extract_data_client(request, erreurs):
     elif '/edit/' in request.path:
         mode = "update"
     
-    client_id = request.POST.get('client_id')
+    if mode == "update":
+        client_id = request.POST.get('client_id')
+        
     
     if mode == "update" and not client_id:
         erreurs['client']['id'] = "L'identifiant du client est requis pour une mise à jour"
         raise ValidationError("Erreur(s) dans le formulaire", details=erreurs)
     
     if mode == "create":    
+        client_id = request.POST.get('client')
         if client_id:
             return {'id': client_id}
 
@@ -89,7 +92,7 @@ def extract_data_vehicule(request, client, erreurs):
     
     vehicule_id = request.POST.get('vehicule_id')
     
-    if vehicule_id:
+    if not vehicule_id:
             date_str = request.POST.get('mise_circulation', "")
             if date_str:
                 mise_circulation = datetime.strptime(date_str, '%Y-%m-%d').date()
@@ -110,7 +113,7 @@ def extract_data_vehicule(request, client, erreurs):
             'modele': request.POST.get('modele'),
             'immatriculation': request.POST.get('immatriculation'),
             'numero_serie': request.POST.get('numero_serie'),
-            'mise_circulation': mise_circulation,
+            'mise_circulation': mise_circulation if mise_circulation else None,
             'kilometrage': request.POST.get('kilometrage', ""),
             'remarque': request.POST.get('remarque_vehicule', ""),
             'vo': request.POST.get('vo') == 'on',
@@ -180,7 +183,6 @@ def extract_data_intervention(request, erreurs):
 
     return {'interventions': interventions}
 
-
 def extract_data_mission(request, vehicule, client, erreurs, mission_id):
     """
     Extrait les données d'une mission à partir d'une requête HTTP POST.
@@ -209,7 +211,7 @@ def extract_data_mission(request, vehicule, client, erreurs, mission_id):
 
 
     mission = {
-        'id': mission_id,
+        'id': mission_id if mission_id else None,
         'remarque': request.POST.get('remarque_mission'),
         'priorite': request.POST.get('priorite'),
         'vehicule': vehicule_obj,

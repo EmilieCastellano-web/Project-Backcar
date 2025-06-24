@@ -72,10 +72,12 @@
         <input type="checkbox" id="vo" name="vo">
         <h3>Véhicule déjà existant</h3>
         <label for="vehicule">Véhicule:</label>
-        <select id="vehicule" name="vehicule">
+        <select id="vehicule" name="vehicule_id">
             <option value="">-- Choisis un véhicule --</option>
             {% for vehicule in vehicules %}
-                <option value="{{ vehicule.id }}">{{ vehicule.marque }} {{ vehicule.modele }}</option>
+                <option value="{{ vehicule.id }}"{% if valeurs.vehicule_id == vehicule.id|stringformat:"s" %}selected{% endif %}>
+                    {{ vehicule.marque }} {{ vehicule.modele }}
+                </option>
             {% endfor %}
         </select>
 
@@ -95,7 +97,7 @@
                 {% endfor %}
             </select>
 
-            <ul id="intervention-list"></ul>
+            <ul id="interventions-list"></ul>
 
             <input type="hidden" name="interventions" id="interventions-hidden">
 

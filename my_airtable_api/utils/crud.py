@@ -15,6 +15,7 @@ def create_client(data, erreurs):
     """
     
     try:
+        data.pop('id', None)  # retire 'id' si déjà présent
         # Vérification client déjà existant
         if 'email' in data:
             client = Client.objects.filter(email=data['email']).first()
@@ -30,7 +31,18 @@ def create_client(data, erreurs):
         raise
 
 def create_vehicule(data, client, erreurs):
+    """Crée un véhicule à partir des données fournies.
+    Args:
+        data (dict): Les données du véhicule à créer
+        client (Client): L'objet client auquel le véhicule est associé
+        erreurs (dict): Un dictionnaire pour stocker les erreurs de validation
+    Returns:
+        Vehicule: L'objet véhicule créé
+    Raises:
+        ValidationError: Si des erreurs de validation sont détectées dans les données
+    """    
     try:
+        data.pop('id', None)  # retire 'id' si déjà présent
         vehicule = Vehicule.objects.filter(numero_serie=data.get('numero_serie')).first()
         if vehicule:
             erreurs['vehicule']['numero_serie'] = "Un véhicule avec ce numéro de série existe déjà"
@@ -51,30 +63,72 @@ def create_interventions(data_list, erreurs):
         interventions.append(Intervention.objects.create(**data))
     return interventions
 
-def create_mission(data, client, vehicule, mission_intervention_data, erreurs):
-    data = data.copy()  # pour ne pas modifier l'original
-    data.pop('client', None)
-    data.pop('vehicule', None)
+def create_taches(mission_interventions, client, vehicule):
+    """Fonction principale de la création. Crée les tâches (mission, client, véhicule) à partir des données fournies.
+    Args:
+        data (dict): Les données de la mission, du client et du véhicule.
+    Returns:
+        Mission: L'objet mission créé.
+    Raises:
+        ValidationError: Si des erreurs de validation sont détectées dans les données.
+    """
+    try:
+        with transaction.atomic():
+            # Création de la mission à partir du premier élément (toutes les interventions ont la même mission)
+            mission_data = mission_interventions[0]['mission']
+            mission_data['client'] = client
+            mission_data['vehicule'] = vehicule
 
-    mission = Mission.objects.filter(vehicule=vehicule, client=client).first()
-    if mission:
-        erreurs['mission']['id'] = "Une mission pour ce véhicule et ce client existe déjà"
-        raise ValidationError("Une mission pour ce véhicule et ce client existe déjà", details=erreurs)
+            interventions = [mi['intervention'] for mi in mission_interventions]
+
+            mission = create_mission(mission_data, interventions, erreurs={})
+
+            # Création des liaisons mission-intervention
+            mission_intervention_list = []
+            for mi in mission_interventions:
+                mi_data = {
+                    'mission': mission,
+                    'intervention': mi['intervention'],
+                    'duree_supplementaire': mi['duree_supplementaire'],
+                    'taux': mi['taux'],
+                    'cout_total': mi['cout_total']
+                }
+                mission_intervention_list.append(mi_data)
+
+            create_mission_interventions(mission_intervention_list, erreurs={})
+
+        return mission
+    except Exception as e: 
+        logging.error(f"Error in create_taches: {e}")
+        raise ValidationError("Erreur lors de la création des tâches")
+
+def create_mission(mission_data, interventions, erreurs):
+    """Crée une mission à partir des données fournies.
     
-    mission = Mission.objects.create(
-        **data,
-        client=client,
-        vehicule=vehicule
-    )
-    logging.info(f"Mission created for vehicle {vehicule.marque} {vehicule.modele} and client {client.nom} {client.prenom}: {mission}")
-    # 2. Ajout de la mission dans chaque relation
-    for mi in mission_intervention_data:
-        mi['mission'] = mission
+    Args:
+        mission_data (dict): Les données de la mission à créer.
+        interventions (list): Liste des interventions associées à la mission.
+        erreurs (dict): Un dictionnaire pour stocker les erreurs de validation.
+        
+    Returns:
+        Mission: L'objet mission créé.
+        
+    Raises:
+        ValidationError: Si des erreurs de validation sont détectées dans les données.
+    """
+    try:
+        logging.info(f"Type mission_data client: {type(mission_data.get('client'))}")
 
-    # 3. Création des enregistrements dans la table pivot
-    create_mission_interventions(mission_intervention_data, erreurs)
-    return mission
+        fields = ['remarque', 'priorite', 'client', 'vehicule']
+        mission = Mission.objects.create(**{f: mission_data[f] for f in fields})
 
+        logging.info(f"Mission created: {mission}")
+        
+        return mission
+    except Exception as e:
+        logging.error(f"Error creating mission: {e}")
+        raise ValidationError("Erreur lors de la création de la mission", details=erreurs)
+    
 def create_mission_interventions(mission_interventions, erreurs):
     try:
         for mi_data in mission_interventions:
@@ -82,7 +136,7 @@ def create_mission_interventions(mission_interventions, erreurs):
         logging.info("Mission interventions created successfully.")
     except Exception as e:
         logging.error(f"Error creating mission interventions: {e}")
-        raise
+        raise ValidationError("Erreur lors de la création des interventions", details=erreurs)
 
 def update_client(data):
     """Met à jour les informations d'un client.

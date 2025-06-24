@@ -5,7 +5,7 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(message)s')
 from django.db import transaction
 
-from my_airtable_api.utils.crud import create_client, create_vehicule, create_mission, get_client_by_id, get_vehicule_by_id, get_all_mission_intervention_by_id, get_mission_by_id, update_taches
+from my_airtable_api.utils.crud import create_taches, create_client, create_vehicule, get_client_by_id, get_vehicule_by_id, get_all_mission_intervention_by_id, get_mission_by_id, update_taches
 from my_airtable_api.utils.extract_data import ValidationError, extract_data_client, extract_data_vehicule, extract_data_intervention, extract_data_mission, extract_data_mission_intervention
 
 
@@ -121,40 +121,52 @@ def mission_form_view(request):
         erreurs = {
             'client': {},
             'vehicule': {},
-            'mission': {},
+            'mission': {}, 
             'intervention': {}
         }
         try:
             with transaction.atomic():
+                # 1. Extraction des données
                 client_data = extract_data_client(request, erreurs)
-                # Récupération ou création du client
-                if client_data.get('id'):
-                    client = get_client_by_id(client_data['id'])
+                if client_data.get('id'): 
+                    client = get_client_by_id(client_data['id'])  # objet existant
                 else:
-                    client = create_client(client_data, erreurs)
-                    
-                # Récupération ou création du véhicule
-                vehicule_data = extract_data_vehicule(request, client_data, erreurs)
+                    client = create_client(client_data, erreurs)  # sinon on le crée
+
+                logging.info(f"Client data extracted: {client}")
+                
+                vehicule_data = extract_data_vehicule(request, client, erreurs)
                 if vehicule_data.get('id'):
                     vehicule = get_vehicule_by_id(vehicule_data['id'])
-                    if vehicule.client != client:
-                        erreurs['vehicule']['client'] = "Le véhicule appartien à un autre client"
+                    if vehicule.client.id != client.id:
+                        erreurs['vehicule']['client'] = "Le véhicule appartient à un autre client"
                         raise ValidationError("Erreur(s) dans le formulaire", details=erreurs)
                 else:
                     vehicule = create_vehicule(vehicule_data, client, erreurs)
+                logging.info(f"Vehicule data extracted: {vehicule}")
                 
                 interventions = extract_data_intervention(request, erreurs)
-                
-                mission_data = extract_data_mission(request, vehicule)
-                mission_intervention_data = extract_data_mission_intervention(request, mission_data, interventions, erreurs)
-                mission = create_mission(mission_data, client, vehicule, mission_intervention_data, erreurs)
-                
+                logging.info(f"Interventions data extracted: {interventions}")
+                mission_data = extract_data_mission(request, vehicule, client, erreurs, mission_id=None)
+                logging.info(f"Mission data extracted: {mission_data}")
+                mission_interventions = extract_data_mission_intervention(request, mission_data, interventions, erreurs)
+                logging.info(f"Mission Intervention data extracted: {mission_interventions}")
+                # Récuperation des données 
+                #  INFO:Client data extracted: Lilo Lila
+                # INFO:Vehicule data extracted: Audi A5
+                # INFO:Interventions data extracted: {'interventions': [<Intervention: Intervention object (2)>, <Intervention: Intervention object (3)>]}
+                # INFO:Mission data extracted: {'id': None, 'remarque': '', 'priorite': 'BASSE', 'vehicule': <Vehicule: Audi A5>, 'client': <Client: Lilo Lila>}
+                # INFO:Mission Intervention data extracted: [{'mission': {'id': None, 'remarque': '', 'priorite': 'BASSE', 'vehicule': <Vehicule: Audi A5>, 'client': <Client: Lilo Lila>}, 
+                # 'intervention': <Intervention: Intervention object (2)>, 'duree_supplementaire': 0.0, 'taux': 'T2', 'cout_total': 250.0},
+                # {'mission': {'id': None, 'remarque': '', 'priorite': 'BASSE', 'vehicule': <Vehicule: Audi A5>, 'client': <Client: Lilo Lila>}, 
+                # 'intervention': <Intervention: Intervention object (3)>, 'duree_supplementaire': 0.0, 'taux': 'T2', 'cout_total': 800.0}]
+                mission = create_taches(mission_interventions, client, vehicule)
+
                 logging.info(f"Mission created: {mission}")
                 return redirect('list_view')
         
         except ValidationError as ve:
             logging.error(f"Validation error: {ve.message}")
-            # logging.info(f"VALEURS: {request.POST.dict()}")
             return render(request, 'new_mission.html', {
                 'erreurs': erreurs,
                 'valeurs': request.POST.dict(),
