@@ -7,7 +7,7 @@
     <title>Liste des Missions</title>
 </head>
 <body>    
-    <form method="post" action="{% url 'post_mission' %}" id="new_mission_form">
+    <form method="post" action="{% url 'mission_form_view' %}" id="new_mission_form">
         {% csrf_token %}
         <h2>Créer un nouveau client</h2>
 

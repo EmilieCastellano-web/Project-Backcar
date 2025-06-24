@@ -13,8 +13,51 @@
             <div>
                 {{ message }}
             </div>
-        {% endfor %}
-    {% endif %}
+        {% endfor %}    {% endif %}
+
+    <!-- Formulaire de filtrage -->
+    <div>
+        <h3>Filtrer les missions</h3>
+        <form method="get">
+            <div>
+                <label for="client">Client (nom ou prénom) :</label>
+                <input type="text" id="client" name="client" value="{{ filter_client }}" placeholder="Rechercher par nom ou prénom">
+            </div>
+            
+            <div>
+                <label for="vehicule">Véhicule (marque, modèle ou immatriculation) :</label>
+                <input type="text" id="vehicule" name="vehicule" value="{{ filter_vehicule }}" placeholder="Rechercher par marque, modèle ou immatriculation">
+            </div>
+            
+            <div>
+                <label for="priorite">Priorité :</label>
+                <select id="priorite" name="priorite">
+                    <option value="">Toutes les priorités</option>
+                    {% for code, libelle in priorites_choices %}
+                        <option value="{{ code }}" {% if filter_priorite == code %}selected{% endif %}>
+                            {{ libelle }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div>
+                <label for="date_debut">Date de début :</label>
+                <input type="date" id="date_debut" name="date_debut" value="{{ filter_date_debut }}">
+            </div>
+            
+            <div>
+                <label for="date_fin">Date de fin :</label>
+                <input type="date" id="date_fin" name="date_fin" value="{{ filter_date_fin }}">
+            </div>
+            
+            <div>
+                <button type="submit">Filtrer</button>
+                <a href="{% url 'list_view' %}">Réinitialiser</a>
+            </div>
+        </form>
+    </div>
+    <br>
 
     <label>Liste des Missions Interventions</label>
     <table border="1">
