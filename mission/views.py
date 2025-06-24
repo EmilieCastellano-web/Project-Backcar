@@ -217,7 +217,11 @@ def update_mission_view(request, mission_id):
     mission = get_mission_by_id(mission_id)
     if not mission:
         logging.error(f"Mission with id {mission_id} does not exist.")
-        return render(request, 'error.html', {'error': 'Mission not found'})
+        return render_with_error_handling(request, 'error.html', {
+            'error': str(e),
+            'template_error': True,
+            'error_type': 'template_render_error'
+        })
 
     mission_intervention_display = [
         {
@@ -254,7 +258,7 @@ def update_mission_view(request, mission_id):
             
             except ValidationError as ve:
                 logging.warning(f"Validation error: {ve}")
-                return render(request, 'update_mission.html', {
+                return render_with_error_handling(request, 'update_mission.html', {
                     'erreurs': erreurs,
                     'valeurs': request.POST.dict(),
                     'mission': mission,
@@ -271,10 +275,14 @@ def update_mission_view(request, mission_id):
                 })
             except Exception as e:
                 logging.error(f"Error updating GLOBAL: {e}")
-                return render(request, 'error.html', {'error': str(e)})
+                return render(request, 'error.html', {
+                    'error': str(e),
+                    'template_error': True,
+                    'error_type': 'template_render_error'
+                })
 
     # GET : affichage du formulaire
-    return render(request, 'update_mission.html', {
+    return render_with_error_handling(request, 'update_mission.html', {
         'mission': mission,
         'mission_intervention': {
             'mission': mission,
@@ -323,18 +331,22 @@ def delete_mission_view(request, mission_id):
             return redirect('list_view')
         else:
             logging.error(f"Échec de la suppression de la mission {mission_id}: {result.get('message', 'Erreur inconnue')}")
-            return render(request, 'error.html', {
+            return render_with_error_handling(request, 'error.html', {
                 'error': f"Impossible de supprimer la mission: {result.get('message', 'Erreur inconnue')}"
             })
             
     except ValidationError as ve:
         logging.error(f"Erreur de validation lors de la suppression de la mission {mission_id}: {ve}")
-        return render(request, 'error.html', {
-            'error': f"Erreur lors de la suppression: {str(ve)}"
+        return render_with_error_handling(request, 'error.html', {
+            'error': str(ve),
+            'template_error': True,
+            'error_type': 'template_render_error'
         })
         
     except Exception as e:
         logging.error(f"Erreur inattendue lors de la suppression de la mission {mission_id}: {e}")
-        return render(request, 'error.html', {
-            'error': f"Erreur inattendue lors de la suppression: {str(e)}"
+        return render_with_error_handling(request, 'error.html', {
+            'error': str(e),
+            'template_error': True,
+            'error_type': 'template_render_error'
         })
