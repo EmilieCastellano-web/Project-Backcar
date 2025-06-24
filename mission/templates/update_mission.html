@@ -39,14 +39,14 @@
             {% for champ, message in erreurs.vehicule.items %}
                 <p style="color:red;">{{ message }}</p>
             {% endfor %}
-        {% endif %}
+        {% endif %}  
 
         <label for="kilometrage">Kilométrage:</label>
-        <input type="number" id="kilometrage" name="kilometrage" value="{{ mission.vehicule.kilometrage|default_if_none:'' }}">
+        <input type="number" id="kilometrage" name="kilometrage" value="{{ mission.vehicule.kilometrage|default_if_none:'' }}">       
         <label for="remarque _vehicule">Remarque:</label>
-        <textarea id="remarque_vehicule" name="remarque_vehicule" rows="4" cols="50"></textarea>
+        <textarea id="remarque_vehicule" name="remarque_vehicule" rows="4" cols="50"></textarea>        
         <label for="vo">Véhicule d'Occasion:</label>
-        <input type="checkbox" id="vo" name="vo">
+        <input type="checkbox" id="vo" name="vo" {% if mission.vehicule.vo %}checked{% endif %}>
 
         <h2>Modifier les interventions</h2>
         {% if erreurs.intervention %}
@@ -84,24 +84,20 @@
             {% for champ, message in erreurs.mission.items %}
                 <p style="color:red;">{{ message }}</p>
             {% endfor %}
-        {% endif %}
-
-        <label for="priorite">Priorité :</label>
+        {% endif %}        <label for="priorite">Priorité :</label>
         <select id="priorite" name="priorite" required>
             <option value="">-- Choisis une priorité --</option>
             {% for name, label in priorites %}
-                <option value="{{ name }}">{{ label }}</option>
+                <option value="{{ name }}" {% if valeurs.priorite == name|stringformat:"s" or mission.priorite == name %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
-        </select>
-        <label for="_mission">Remarque :</label>
-        <textarea id="remarque_mission" name="remarque_mission" rows="4" cols="50"></textarea>
-        <label for="taux">Taux :</label>
+        </select>        <label for="_mission">Remarque :</label>
+        <textarea id="remarque_mission" name="remarque_mission" rows="4" cols="50"></textarea><label for="taux">Taux :</label>
         <select id="taux" name="taux" required>
             <option value="">-- Choisis un taux --</option>
             {% for name, label in taux %}
-                <option value="{{ name }}">{{ label }}</option>
+                <option value="{{ name }}" {% if valeurs.taux == name|stringformat:"s" or mission_intervention_list.0.taux == name %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
-        </select>  
+        </select>
 
         <button type="submit">Enregistrer les modifications</button>
     </form>
