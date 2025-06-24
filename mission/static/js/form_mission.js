@@ -18,11 +18,11 @@
 document.addEventListener('DOMContentLoaded', function() {
     const isFormPage = document.getElementById('new_mission_form') != null;
     const updateFormPage = document.getElementById('update_mission_form') != null;
+    
     if (updateFormPage) {
         initInterventionForm();
-        manageInterventionUpdateForm();
-
     }
+    
     if (isFormPage) {
         const wasFormSubmitted = sessionStorage.getItem('form_submitted') === 'true';
         initInterventionForm();
@@ -37,7 +37,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Ajouter un gestionnaire d'événements pour la soumission du formulaire
         document.getElementById('new_mission_form').addEventListener('submit', function() {
             sessionStorage.setItem('form_submitted', 'true');
-            
         });
     } else {
         sessionStorage.removeItem('interventions');
@@ -53,31 +52,66 @@ document.addEventListener('DOMContentLoaded', function() {
 */
 function initInterventionForm() {
     const select = document.getElementById('intervention-select');
-    const list = document.getElementById('intervention-list');
-    const hiddenInput = document.getElementById('interventions-hidden');
-
+    const list = document.getElementById('interventions-list');
     let selectedIds = [];
+    const hiddenInput = document.getElementById('interventions-hidden');
+    const interventionsActuellesList = document.getElementById('interventions-actuelles-list');
+    let selectedIdsActuelles = [];
+    const hiddenInputActuelles = document.getElementById('interventions-actuelles-hidden');
+
+    if (hiddenInputActuelles) {
+        selectedIdsActuelles = hiddenInputActuelles.value.split(',').filter(id => id);
+        console.log('Liste des IDs actuels :', hiddenInputActuelles.value);
+    }
+    
+    if (selectedIdsActuelles) {
+        selectedIdsActuelles.forEach(id => {
+            if (id) {
+                selectedIds.push(id);
+            }
+            console.log('Liste des IDs sélectionnés :', selectedIds);
+        });
+    }
+    document.querySelectorAll('.remove-intervention').forEach(button => {
+        button.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            selectedIds = selectedIds.filter(selectedId => selectedId !== id);
+            hiddenInput.value = selectedIds.join(',');
+            const li = this.parentElement;
+            interventionsActuellesList.removeChild(li);
+            console.log('Interventions sélectionnées mises à jour :', hiddenInput.value);
+        });
+    });
+
 
     select.addEventListener('change', () => {
         const val = select.value;
         const text = select.options[select.selectedIndex].text;
 
-        if (val && !selectedIds.includes(val)) {
+        if (val && !selectedIds.includes(val) && !selectedIdsActuelles.includes(val)) {
             selectedIds.push(val);
 
-            // Crée un élément <li> affiché
             const li = document.createElement('li');
             li.textContent = text;
+            li.style.padding = '5px';
+            li.style.margin = '2px 0';
+            li.style.backgroundColor = '#f0f0f0';
+            li.style.borderRadius = '3px';
 
             // Ajouter un bouton pour supprimer
             const btn = document.createElement('button');
             btn.textContent = '×';
             btn.style.marginLeft = '10px';
+            btn.style.backgroundColor = '#ff4444';
+            btn.style.color = 'white';
+            btn.style.border = 'none';
+            btn.style.borderRadius = '3px';
+            btn.style.cursor = 'pointer';
             btn.type = 'button';
             btn.onclick = () => {
-            list.removeChild(li);
-            selectedIds = selectedIds.filter(id => id !== val);
-            hiddenInput.value = selectedIds.join(',');
+                list.removeChild(li);
+                selectedIds = selectedIds.filter(id => id !== val);
+                hiddenInput.value = selectedIds.join(',');
             };
 
             li.appendChild(btn);
@@ -86,14 +120,18 @@ function initInterventionForm() {
             // Met à jour l'input caché
             hiddenInput.value = selectedIds.join(',');
             savedInterventionsToSession(hiddenInput);
-            
+            console.log('Interventions sélectionnées mises à jour :', hiddenInput.value);
         }
         // Remet le select à vide
         select.value = "";
-        });
+    });
+
+
+    
 }
 
-/** * Fonction pour sauvegarder les interventions sélectionnées dans le stockage de session.
+/**
+ * Fonction pour sauvegarder les interventions sélectionnées dans le stockage de session.
  * 
  * @param {HTMLInputElement} hiddenInput - L'input caché contenant les IDs des interventions sélectionnées.
  */
@@ -101,33 +139,16 @@ function savedInterventionsToSession(hiddenInput) {
     sessionStorage.setItem('interventions', hiddenInput.value);
 }
 
-function manageInterventionUpdateForm() {
-    const list = document.getElementById('intervention_actuelle');
-    const hiddenInput = document.getElementById('interventions-actuelle-hidden');
-    list.querySelectorAll('li').forEach(li => {
-        const id = li.querySelector('.remove-intervention').getAttribute('data-id');
-        // Ajouter l'ID de l'intervention à l'input caché
-        if (hiddenInput.value) {
-            hiddenInput.value += ',' + id;
-        } else {
-            hiddenInput.value = id;
+/**
+ * Fonction pour restaurer les interventions depuis le stockage de session
+ */
+function restoreFormInterventions() {
+    const savedInterventions = sessionStorage.getItem('interventions');
+    if (savedInterventions) {
+        const hiddenInput = document.getElementById('interventions-hidden');
+        if (hiddenInput) {
+            hiddenInput.value = savedInterventions;
+            console.log('Interventions restaurées:', savedInterventions);
         }
-    });
-
-
-    // Ajouter un écouteur d'événement pour les boutons de suppression
-    list.addEventListener('click', function(event) {
-        if (event.target.classList.contains('remove-intervention')) {
-            const li = event.target.parentElement;
-            const id = event.target.getAttribute('data-id');
-
-            // Supprimer l'élément <li>
-            list.removeChild(li);
-
-            // Mettre à jour l'input caché
-            let currentInterventions = hiddenInput.value.split(',').filter(i => i !== id);
-            hiddenInput.value = currentInterventions.join(',');
-        }
-    });
+    }
 }
-

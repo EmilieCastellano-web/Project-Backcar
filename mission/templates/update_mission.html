@@ -5,18 +5,20 @@
 <head>
     <meta charset="utf-8" />
     <title>Modifier Mission</title>
-</head>
 <body>
-    <form method="post" action="{% url 'edit_mission' id=mission.id_mission_intervention %}" id="update_mission_form">
+    <form method="post" action="{% url 'edit_mission' mission.id %}" id="update_mission_form">
         {% csrf_token %}
-        <input type="hidden" name="mission_id" value="{{ mission.id }}">
+        <input type="hidden" name="client_id" value="{{ mission.client.id|default_if_none:'' }}">
+        <input type="hidden" name="vehicule_id" value="{{ mission.vehicule.id|default_if_none:'' }}">
         <h2>Modifier le client</h2>
+        <p>{{mission}}</p>
+
         {% if erreurs.client %}
             {% for champ, message in erreurs.client.items %}
                 <p style="color:red;">{{ message }}</p>
-            {% endfor %}
+            {% endfor %} 
         {% endif %}
-        <p>{{mission}}</p>
+
         <label for="nom">Nom:</label>
         <input type="text" id="nom" name="nom" value="{{ mission.client.nom|default_if_none:'' }}">
         <label for="societe">Société:</label>
@@ -32,8 +34,7 @@
         <label for="ville">Ville:</label>
         <input type="text" id="ville" name="ville" value="{{ mission.client.ville|default_if_none:'' }}">
         
-        {% comment %} <h2>Modifier le véhicule</h2>
-
+        <h2>Modifier le véhicule</h2>
         {% if erreurs.vehicule %}
             {% for champ, message in erreurs.vehicule.items %}
                 <p style="color:red;">{{ message }}</p>
@@ -42,13 +43,14 @@
 
         <label for="kilometrage">Kilométrage:</label>
         <input type="number" id="kilometrage" name="kilometrage" value="{{ mission.vehicule.kilometrage|default_if_none:'' }}">
-        <label for="remarque_vehicule">Remarque:</label>
+        <label for="remarque _vehicule">Remarque:</label>
         <textarea id="remarque_vehicule" name="remarque_vehicule" rows="4" cols="50"></textarea>
-        
-        <h2>Modifier les interventions</h2>
+        <label for="vo">Véhicule d'Occasion:</label>
+        <input type="checkbox" id="vo" name="vo">
 
-        {% if erreurs.interventions %}
-            {% for champ, message in erreurs.interventions.items %}
+        <h2>Modifier les interventions</h2>
+        {% if erreurs.intervention %}
+            {% for champ, message in erreurs.intervention.items %}
                 <p style="color:red;">{{ message }}</p>
             {% endfor %}
         {% endif %}
@@ -57,23 +59,25 @@
         <select id="intervention-select">
             <option value="">-- Choisis une intervention --</option>
             {% for intervention in interventions %}
-                <option value="{{ intervention.id }}">{{ intervention.libelle }}</option>
+                <option value="{{ intervention.id }}">{{ intervention.libelle }}</option>            
             {% endfor %}
         </select>
-
-        <ul id="intervention-list"></ul>
-        <input type="hidden" name="interventions" id="interventions-hidden">
-
-        <ul id="intervention_actuelle">
-            {% for intervention in mission.list_interventions %}
-                <li>
-                    {{ intervention.libelle }}
-                    <button type="button" class="remove-intervention" data-id="{{ intervention.id }}">X</button>
-                </li>
-            {% endfor %}
-        </ul>
-        <input type="hidden" name="interventions" id="interventions-actuelle-hidden">
-
+        
+        <div class="interventions-section">
+            <h3>Nouvelles interventions à ajouter :</h3>
+            <ul id="interventions-list"></ul>
+            <input type="hidden" name="interventions" id="interventions-hidden">
+            <h3>Interventions actuelles :</h3>
+            <ul id="interventions-actuelles-list">
+                {% for mi in mission_intervention_list %}
+                    <li>
+                        {{ mi.libelle }}
+                        <button type="button" class="remove-intervention" data-id="{{ mi.id_intervention }}">Supprimer</button>
+                    </li>
+                {% endfor %}
+            </ul>
+            <input type="hidden" id="interventions-actuelles-hidden" value="{% for mi in mission_intervention_list %}{{ mi.id_intervention }}{% if not forloop.last %},{% endif %}{% endfor %}">
+        </div>
         <h2>Modifier la mission</h2>
 
         {% if erreurs.mission %}
@@ -97,7 +101,7 @@
             {% for name, label in taux %}
                 <option value="{{ name }}">{{ label }}</option>
             {% endfor %}
-        </select>  {% endcomment %}
+        </select>  
 
         <button type="submit">Enregistrer les modifications</button>
     </form>

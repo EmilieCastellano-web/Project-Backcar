@@ -5,7 +5,7 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(message)s')
 from django.db import transaction
 
-from my_airtable_api.utils.crud import create_client, create_vehicule, create_mission, get_client_by_id, get_vehicule_by_id, get_mission_intervention_by_id, update_client
+from my_airtable_api.utils.crud import create_client, create_vehicule, create_mission, get_client_by_id, get_vehicule_by_id, get_all_mission_intervention_by_id, get_mission_by_id, update_taches
 from my_airtable_api.utils.extract_data import ValidationError, extract_data_client, extract_data_vehicule, extract_data_intervention, extract_data_mission, extract_data_mission_intervention
 
 
@@ -116,6 +116,7 @@ def mission_form_view(request):
     Raises:
         ValidationError: Si des erreurs de validation sont détectées dans les données du formulaire
     """
+    #TODDO MODIFIER FONCTION UN APPELLE AU CRUD 
     if request.method == 'POST':
         erreurs = {
             'client': {},
@@ -143,9 +144,12 @@ def mission_form_view(request):
                     vehicule = create_vehicule(vehicule_data, client, erreurs)
                 
                 interventions = extract_data_intervention(request, erreurs)
+                
                 mission_data = extract_data_mission(request, vehicule)
                 mission_intervention_data = extract_data_mission_intervention(request, mission_data, interventions, erreurs)
                 mission = create_mission(mission_data, client, vehicule, mission_intervention_data, erreurs)
+                
+                logging.info(f"Mission created: {mission}")
                 return redirect('list_view')
         
         except ValidationError as ve:
@@ -173,7 +177,7 @@ def mission_form_view(request):
             'taux': [(choix.name, choix.value) for choix in Taux]
         })
 
-def update_mission_view(request, id):
+def update_mission_view(request, mission_id):
     """Affiche le formulaire de mise à jour d'une mission existante.
     Cette vue gère l'affichage du formulaire pour mettre à jour une mission existante.
     Si la requête est de type POST, elle traite les données du formulaire.
@@ -189,59 +193,81 @@ def update_mission_view(request, id):
         'client': {},
         'vehicule': {},
         'mission': {},
-        'intervention': {}
+        'intervention': {},
+        'mission_intervention': {}
     }
-    mission = get_mission_intervention_by_id(id)
+    mission_intervention_list = get_all_mission_intervention_by_id(mission_id)
+    mission = get_mission_by_id(mission_id)
     if not mission:
-        logging.error(f"Mission with id {id} does not exist.")
+        logging.error(f"Mission with id {mission_id} does not exist.")
         return render(request, 'error.html', {'error': 'Mission not found'})
 
-    mission_intervention = {
-            'id': mission.mission.id,
-            'id_mission_intervention': mission.id,
-            'date_demande': mission.mission.date_demande,
-            'remarque': mission.mission.remarque,
-            'priorite': mission.mission.priorite.replace('_', ' ').title(),
-            'taux': mission.taux.title(),
-            'vehicule': mission.mission.vehicule,
-            'client': mission.mission.client,
-            'cout_total': mission.cout_total,
-            'list_interventions': [
-                {
-                    'id': mission.intervention.id,
-                    'libelle': mission.intervention.libelle
-                }
-            ]
-        }
-    # logging.info(f"Mission to update: {mission_intervention}")
-    # logging.info(request.method)
+    mission_intervention_display = [
+        {
+            'id': mi.id,
+            'id_intervention': mi.intervention.id,
+            'libelle': mi.intervention.libelle,
+            'prix_unitaire': mi.intervention.prix_unitaire,
+            'taux': mi.taux,
+            'priorite': mi.mission.priorite,
+            'cout_total': mi.cout_total
+        } for mi in mission_intervention_list
+    ]
     if request.method == 'POST':
-        # logging.info(f"UPDATING mission with id {id}")
-        with transaction.atomic():
             try:
-                client = mission.mission.client
-                client = extract_data_client(request, erreurs, client=client)
-                client = update_client(client)
+                # 1. Extraction des données
+                client = extract_data_client(request, erreurs)
+                vehicule = extract_data_vehicule(request, client, erreurs)
+                interventions = extract_data_intervention(request, erreurs)
+                mission_data = extract_data_mission(request, vehicule, client, erreurs, mission_id)
+                mission_interventions = extract_data_mission_intervention(request, mission_data, interventions, erreurs)
+
+                # 2. Construction du paquet global
+                data = {
+                    'client': client,
+                    'vehicule': vehicule,
+                    'mission': mission_data,
+                    'mission_interventions': mission_interventions
+                }
+
+                # 3. Mise à jour dans la BDD
+                update_taches(data)
+
                 return redirect('list_view')
+            
             except ValidationError as ve:
-                logging.error(f"Validation error: {ve.message}")
+                logging.warning(f"Validation error: {ve}")
                 return render(request, 'update_mission.html', {
                     'erreurs': erreurs,
                     'valeurs': request.POST.dict(),
-                    'mission': mission_intervention,
+                    'mission': mission,
+                    'mission_intervention': {
+                        'mission': mission,
+                        'mission_intervention_list': mission_intervention_list,
+                        'vehicule': mission.vehicule,
+                        'client': mission.client,
+                    },
+                    'mission_intervention_list': mission_intervention_display,
                     'interventions': Intervention.objects.all(),
                     'priorites': [(choix.name, choix.value) for choix in Priorite],
-                    'taux': [(choix.name, choix.value) for choix in Taux]
+                    'taux': [(choix.name, choix.value) for choix in Taux],
                 })
             except Exception as e:
-                logging.error(f"Error updating client: {e}")
-                return render(request, 'error.html', {'error': str(e), 'client': client})
-            
-    else:
-        # logging.info(f"RENDERING update form for mission with id {id}")
-        return render(request, 'update_mission.html', {
-            'mission': mission_intervention,
-            'interventions': Intervention.objects.all(),
-            'priorites': [(choix.name, choix.value) for choix in Priorite],
-            'taux': [(choix.name, choix.value) for choix in Taux]
-        })
+                logging.error(f"Error updating GLOBAL: {e}")
+                return render(request, 'error.html', {'error': str(e)})
+
+    # GET : affichage du formulaire
+    return render(request, 'update_mission.html', {
+        'mission': mission,
+        'mission_intervention': {
+            'mission': mission,
+            'mission_intervention_list': mission_intervention_list,
+            'vehicule': mission.vehicule,
+            'client': mission.client,
+        },
+        'mission_intervention_list': mission_intervention_display,
+        'interventions': Intervention.objects.all(),
+        'priorites': [(choix.name, choix.value) for choix in Priorite],
+        'taux': [(choix.name, choix.value) for choix in Taux],
+        'erreurs': erreurs,
+    })
