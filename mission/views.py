@@ -4,6 +4,7 @@ from django.shortcuts import render, redirect
 import logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(message)s')
 from django.db import transaction
+from my_airtable_api.utils.error_manage import handle_template_errors, render_with_error_handling
 
 from my_airtable_api.utils.crud import create_taches, create_client, create_vehicule, get_client_by_id, get_vehicule_by_id, get_all_mission_intervention_by_id, get_mission_by_id, update_taches
 from my_airtable_api.utils.extract_data import ValidationError, extract_data_client, extract_data_vehicule, extract_data_intervention, extract_data_mission, extract_data_mission_intervention
@@ -105,6 +106,7 @@ def list_view(request):
         'clients': clients
         }) 
     
+@handle_template_errors()
 def mission_form_view(request):
     """Affiche le formulaire de création d'une nouvelle mission.
     Cette vue gère l'affichage du formulaire pour créer une nouvelle mission.
@@ -116,7 +118,6 @@ def mission_form_view(request):
     Raises:
         ValidationError: Si des erreurs de validation sont détectées dans les données du formulaire
     """
-    #TODDO MODIFIER FONCTION UN APPELLE AU CRUD 
     if request.method == 'POST':
         erreurs = {
             'client': {},
@@ -167,21 +168,25 @@ def mission_form_view(request):
         
         except ValidationError as ve:
             logging.error(f"Validation error: {ve.message}")
-            return render(request, 'new_mission.html', {
+            return render_with_error_handling(request, 'new_mission.html', {
                 'erreurs': erreurs,
                 'valeurs': request.POST.dict(),
                 'clients': Client.objects.all(),
                 'vehicules': Vehicule.objects.all(),
                 'interventions': Intervention.objects.all(),
                 'priorites': [(choix.name, choix.value) for choix in Priorite],
-                'taux': [(choix.name, choix.value) for choix in Taux]
-                })
+                'taux': [(choix.name, choix.value) for choix in Taux]                })
         
         except Exception as e:
             logging.error(f"Error creating mission: {e}")
-            return render(request, 'error.html', {'error': str(e)})
+            # Variable pour gérer l'affichage du template d'erreur
+            return render(request, 'error.html', {
+                'error': str(e),
+                'template_error': True,
+                'error_type': 'template_render_error'
+            })
     else:
-        return render(request, 'new_mission.html', {
+        return render_with_error_handling(request, 'new_mission.html', {
             'clients': Client.objects.all(),
             'vehicules': Vehicule.objects.all(),
             'interventions': Intervention.objects.all(),
