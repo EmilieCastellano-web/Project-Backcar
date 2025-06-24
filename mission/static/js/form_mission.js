@@ -11,7 +11,9 @@
  *    - Configure un écouteur d'événement sur la soumission du formulaire pour sauvegarder l'état
  * 3. Si non:
  *    - Nettoie le stockage de session en supprimant les données d'intervention et le flag de soumission
- * 
+ * 4. Si nous sommes sur une page de mise à jour de mission, initialise le formulaire d'intervention.
+ * Cette approche permet de gérer les interventions de manière dynamique et de conserver l'état du formulaire.
+ *
  * Ce mécanisme permet de préserver les données d'intervention lors des rechargements de page
  * ou des soumissions de formulaire incorrectes.
  */
@@ -24,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     if (isFormPage) {
-        const wasFormSubmitted = sessionStorage.getItem('form_submitted') === 'true';
+        const wasFormSubmitted = getFromSessionStorage('form_submitted') === 'true';
         initInterventionForm();
         sessionStorage.removeItem('form_submitted');
         
@@ -43,6 +45,20 @@ document.addEventListener('DOMContentLoaded', function() {
         sessionStorage.removeItem('form_submitted');
     }
 });
+
+/** * Fonction pour récupérer une valeur depuis le stockage de session.
+ * @param {string} key - La clé de l'élément à récupérer.
+ * @returns {string|null} - La valeur associée à la clé, ou null si l'élément n'existe pas ou si une erreur se produit.
+ */
+function getFromSessionStorage(key) {
+    try {
+        return sessionStorage.getItem(key);
+    } catch (e) {
+        console.warn('SessionStorage inaccessible', e);
+        return null;
+    }
+}
+
 
 /*
 * Fonction pour initialiser le formulaire d'intervention.
@@ -64,26 +80,25 @@ function initInterventionForm() {
         console.log('Liste des IDs actuels :', hiddenInputActuelles.value);
     }
     
-    if (selectedIdsActuelles) {
-        selectedIdsActuelles.forEach(id => {
-            if (id) {
-                selectedIds.push(id);
-            }
-            console.log('Liste des IDs sélectionnés :', selectedIds);
-        });
-    }
+    selectedIds.push(...selectedIdsActuelles);
+
     document.querySelectorAll('.remove-intervention').forEach(button => {
         button.addEventListener('click', function() {
             const id = this.getAttribute('data-id');
+            // Supprime l'ID de la liste des interventions sélectionnées
             selectedIds = selectedIds.filter(selectedId => selectedId !== id);
-            hiddenInput.value = selectedIds.join(',');
+            selectedIdsActuelles = selectedIdsActuelles.filter(actId => actId !== id);
+            // Met à jour les inputs cachés
+            hiddenInput.value = selectedIds.filter(id => !selectedIdsActuelles.includes(id)).join(',');
+            hiddenInputActuelles.value = selectedIdsActuelles.join(',');
+
             const li = this.parentElement;
             interventionsActuellesList.removeChild(li);
-            console.log('Interventions sélectionnées mises à jour :', hiddenInput.value);
+            // console.log('Interventions sélectionnées mises à jour :', hiddenInput.value);
         });
     });
 
-
+    // Liste déroulante pour sélectionner une intervention
     select.addEventListener('change', () => {
         const val = select.value;
         const text = select.options[select.selectedIndex].text;
@@ -110,17 +125,16 @@ function initInterventionForm() {
             btn.type = 'button';
             btn.onclick = () => {
                 list.removeChild(li);
-                selectedIds = selectedIds.filter(id => id !== val);
-                hiddenInput.value = selectedIds.join(',');
+                hiddenInput.value = selectedIds.filter(id => !selectedIdsActuelles.includes(id)).join(',');
+                saveInterventionsToSession(hiddenInput);
             };
 
-            li.appendChild(btn);
+            li.appendChild(btn); 
             list.appendChild(li);
 
-            // Met à jour l'input caché
-            hiddenInput.value = selectedIds.join(',');
-            savedInterventionsToSession(hiddenInput);
-            console.log('Interventions sélectionnées mises à jour :', hiddenInput.value);
+            hiddenInput.value = selectedIds.filter(id => !selectedIdsActuelles.includes(id)).join(',');
+            saveInterventionsToSession(hiddenInput);
+            // console.log('Interventions sélectionnées mises à jour (après ajout) :', hiddenInput.value);
         }
         // Remet le select à vide
         select.value = "";
@@ -135,9 +149,10 @@ function initInterventionForm() {
  * 
  * @param {HTMLInputElement} hiddenInput - L'input caché contenant les IDs des interventions sélectionnées.
  */
-function savedInterventionsToSession(hiddenInput) {
+function saveInterventionsToSession(hiddenInput) {
     sessionStorage.setItem('interventions', hiddenInput.value);
 }
+
 
 /**
  * Fonction pour restaurer les interventions depuis le stockage de session
