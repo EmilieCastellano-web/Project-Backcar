@@ -57,11 +57,11 @@ def create_vehicule(data, client, erreurs):
         logging.error(f"Error creating vehicle: {e}")
         raise
 
-def create_interventions(data_list, erreurs):
-    interventions = []
-    for data in data_list:
-        interventions.append(Intervention.objects.create(**data))
-    return interventions
+# def create_interventions(data_list, erreurs):
+#     interventions = []
+#     for data in data_list:
+#         interventions.append(Intervention.objects.create(**data))
+#     return interventions
 
 def create_taches(mission_interventions, client, vehicule):
     """Fonction principale de la création. Crée les tâches (mission, client, véhicule) à partir des données fournies.
@@ -130,6 +130,15 @@ def create_mission(mission_data, interventions, erreurs):
         raise ValidationError("Erreur lors de la création de la mission", details=erreurs)
     
 def create_mission_interventions(mission_interventions, erreurs):
+    """Crée les interventions liées à une mission.
+    Args:
+        mission_interventions (list): Liste des données des interventions à créer.
+        erreurs (dict): Un dictionnaire pour stocker les erreurs de validation.
+    Raises:
+        ValidationError: Si des erreurs de validation sont détectées dans les données.
+    Returns:
+        None
+    """
     try:
         for mi_data in mission_interventions:
             MissionIntervention.objects.create(**mi_data)
@@ -258,6 +267,14 @@ def update_mission_interventions(interventions_data, mission):
     return updated
         
 def intervention_get_by_id(intervention_id):
+    """Récupère une intervention par son ID.
+    Args:
+        intervention_id (int): L'ID de l'intervention à récupérer.
+    Returns:
+        Intervention: L'objet Intervention correspondant à l'ID.
+    Raises:
+        ValidationError: Si l'intervention n'existe pas.
+    """
     try:
         intervention = Intervention.objects.get(id=intervention_id)
         return intervention
@@ -266,6 +283,14 @@ def intervention_get_by_id(intervention_id):
         raise ValidationError(f"Intervention with id {intervention_id} does not exist.")
     
 def get_client_by_id(client_id):
+    """Récupère un client par son ID.
+
+    Args:
+        client_id (int): L'ID du client à récupérer.
+
+    Returns:
+        Client: L'objet Client correspondant à l'ID.
+    """
     try:
         client = Client.objects.get(id=client_id)
         return client
@@ -274,6 +299,14 @@ def get_client_by_id(client_id):
         return None
     
 def get_vehicule_by_id(vehicule_id):
+    """Récupère un véhicule par son ID.
+
+    Args:
+        vehicule_id (int): L'ID du véhicule à récupérer.
+
+    Returns:
+        Vehicule: L'objet Vehicule correspondant à l'ID.
+    """
     try:
         vehicule = Vehicule.objects.get(id=vehicule_id)
         return vehicule
@@ -282,6 +315,14 @@ def get_vehicule_by_id(vehicule_id):
         return None
     
 def get_all_mission_intervention_by_id(mission_id):
+    """Récupère toutes les interventions liées à une mission par son ID.
+    Args:
+        mission_id (int): L'ID de la mission pour laquelle récupérer les interventions.
+    Returns:
+        QuerySet: Un queryset contenant toutes les interventions liées à la mission.
+    Raises:
+        MissionIntervention.DoesNotExist: Si aucune intervention n'est trouvée pour la mission.
+    """
     try:
         missions_interventions = MissionIntervention.objects.filter(mission_id=mission_id).select_related('mission', 'intervention')
         logging.info(f"Mission intervention found: {missions_interventions}")
@@ -291,6 +332,14 @@ def get_all_mission_intervention_by_id(mission_id):
         return None
     
 def get_mission_by_id(mission_id):
+    """Récupère une mission par son ID.
+    Args:
+        mission_id (int): L'ID de la mission à récupérer.
+    Returns:
+        Mission: L'objet Mission correspondant à l'ID.
+    Raises:
+        Mission.DoesNotExist: Si la mission n'existe pas.
+    """
     try:
         mission = Mission.objects.get(id=mission_id)
         logging.info(f"Mission found: {mission}")
