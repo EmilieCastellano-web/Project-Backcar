@@ -20,18 +20,18 @@
         <h3>Filtrer les missions</h3>
         <form method="get">
             <div>
-                <label for="client">Client (nom ou prénom) :</label>
-                <input type="text" id="client" name="client" value="{{ filter_client }}" placeholder="Rechercher par nom ou prénom">
+                <label for="client-filtrage">Client (nom ou prénom) :</label>
+                <input type="text" id="client-filtrage" name="client-filtrage" value="{{ filter_client }}" placeholder="Rechercher par nom ou prénom">
             </div>
             
             <div>
-                <label for="vehicule">Véhicule (marque, modèle ou immatriculation) :</label>
-                <input type="text" id="vehicule" name="vehicule" value="{{ filter_vehicule }}" placeholder="Rechercher par marque, modèle ou immatriculation">
+                <label for="vehicule-filtrage">Véhicule (marque, modèle ou immatriculation) :</label>
+                <input type="text" id="vehicule-filtrage" name="vehicule-filtrage" value="{{ filter_vehicule }}" placeholder="Rechercher par marque, modèle ou immatriculation">
             </div>
             
             <div>
-                <label for="priorite">Priorité :</label>
-                <select id="priorite" name="priorite">
+                <label for="priorite-filtrage">Priorité :</label>
+                <select id="priorite-filtrage" name="priorite-filtrage">
                     <option value="">Toutes les priorités</option>
                     {% for code, libelle in priorites_choices %}
                         <option value="{{ code }}" {% if filter_priorite == code %}selected{% endif %}>

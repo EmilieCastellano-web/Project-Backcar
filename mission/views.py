@@ -20,9 +20,9 @@ def list_view(request):
         HttpResponse: La réponse HTTP contenant le rendu du template avec les données des missions, véhicules et clients.
     """
     # Récupération des paramètres de filtrage
-    filter_client = request.GET.get('client', '')
-    filter_vehicule = request.GET.get('vehicule', '')
-    filter_priorite = request.GET.get('priorite', '')
+    filter_client = request.GET.get('client-filtrage', '')
+    filter_vehicule = request.GET.get('vehicule-filtrage', '')
+    filter_priorite = request.GET.get('priorite-filtrage', '')
     filter_date_debut = request.GET.get('date_debut', '')
     filter_date_fin = request.GET.get('date_fin', '')
     
@@ -378,8 +378,6 @@ def delete_mission_view(request, mission_id):
     
     # Debug pour vérifier les données de la requête
     logging.info(f"Requête de suppression pour mission {mission_id}")
-    logging.info(f"CSRF Token présent: {'csrfmiddlewaretoken' in request.POST}")
-    logging.info(f"Headers: {dict(request.headers)}")
     
     try:
         from my_airtable_api.utils.crud import delete_mission
