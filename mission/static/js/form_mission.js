@@ -103,3 +103,57 @@ document.addEventListener('DOMContentLoaded', () => {
         list.appendChild(li);
     }
 });
+
+// Fonction de confirmation de suppression de mission
+function confirmDelete(missionId, clientName, vehiculeName, nbInterventions) {
+    const confirmationMessage = `CONFIRMATION DE SUPPRESSION
+
+Êtes-vous absolument certain(e) de vouloir supprimer cette mission ?
+
+Détails de la mission :
+• ID Mission : ${missionId}
+• Client : ${clientName}
+• Véhicule : ${vehiculeName}
+• Interventions : ${nbInterventions}
+
+ATTENTION : Cette action est IRREVERSIBLE !
+
+Toutes les données associées seront perdues définitivement.
+
+Tapez "SUPPRIMER" dans le champ ci-dessous pour confirmer :`;
+
+    const userInput = prompt(confirmationMessage);
+    
+    if (userInput === null) {
+        return false; // Utilisateur a annulé
+    }
+    
+    if (userInput.toUpperCase() !== "SUPPRIMER") {
+        alert("Suppression annulée.\n\nVous devez taper exactement 'SUPPRIMER' pour confirmer.");
+        return false;
+    }
+    
+    // Double confirmation
+    const secondConfirmation = confirm(`DERNIÈRE CONFIRMATION
+
+Vous avez tapé "SUPPRIMER" correctement.
+
+Cliquez sur OK pour supprimer DÉFINITIVEMENT la mission ${missionId}.
+
+Cette action ne peut pas être annulée !`);
+    
+    if (!secondConfirmation) {
+        return false;
+    }
+    
+    // Afficher un message de chargement après validation
+    setTimeout(() => {
+        const deleteButton = document.querySelector('[type="submit"][style*="background-color: #ff4444"]');
+        if (deleteButton) {
+            deleteButton.innerHTML = "Suppression en cours...";
+            deleteButton.disabled = true;
+        }
+    }, 100);
+    
+    return true;
+}

@@ -57,12 +57,6 @@ def create_vehicule(data, client, erreurs):
         logging.error(f"Error creating vehicle: {e}")
         raise
 
-# def create_interventions(data_list, erreurs):
-#     interventions = []
-#     for data in data_list:
-#         interventions.append(Intervention.objects.create(**data))
-#     return interventions
-
 def create_taches(mission_interventions, client, vehicule):
     """Fonction principale de la création. Crée les tâches (mission, client, véhicule) à partir des données fournies.
     Args:
@@ -347,3 +341,54 @@ def get_mission_by_id(mission_id):
     except Mission.DoesNotExist:
         logging.error(f"Mission with id {mission_id} does not exist.")
         return None
+    
+def delete_mission(mission_id):
+    """Supprime une mission et toutes ses relations associées.
+    
+    Args:
+        mission_id (int): L'ID de la mission à supprimer.
+        
+    Returns:
+        dict: Un dictionnaire contenant les informations sur la suppression.
+        
+    Raises:
+        ValidationError: Si la mission n'existe pas ou si une erreur survient lors de la suppression.
+    """
+    try:
+        with transaction.atomic():
+            # Récupération de la mission
+            mission = Mission.objects.get(id=mission_id)
+            
+            # Récupération des informations avant suppression pour le retour
+            mission_info = {
+                'id': mission.id,
+                'date_demande': mission.date_demande,
+                'remarque': mission.remarque,
+                'priorite': mission.priorite,
+                'client': f"{mission.client.prenom} {mission.client.nom}",
+                'vehicule': f"{mission.vehicule.marque} {mission.vehicule.modele}"
+            }
+            
+            # Comptage des MissionIntervention liées (pour information)
+            nb_interventions = MissionIntervention.objects.filter(mission=mission).count()
+            
+            # Suppression de la mission
+            # Les MissionIntervention seront supprimées automatiquement grâce à CASCADE
+            mission.delete()
+            
+            logging.info(f"Mission supprimée avec succès : {mission_info}")
+            logging.info(f"Nombre d'interventions liées supprimées : {nb_interventions}")
+            
+            return {
+                'success': True,
+                'mission_info': mission_info,
+                'nb_interventions_supprimees': nb_interventions,
+                'message': f"Mission {mission_id} supprimée avec succès"
+            }
+            
+    except Mission.DoesNotExist:
+        logging.error(f"Mission avec l'ID {mission_id} introuvable")
+        raise ValidationError(f"Mission avec l'ID {mission_id} introuvable")
+    except Exception as e:
+        logging.error(f"Erreur lors de la suppression de la mission {mission_id}: {e}")
+        raise ValidationError(f"Erreur lors de la suppression de la mission : {str(e)}")

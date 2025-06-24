@@ -1,17 +1,17 @@
 {% load static %}
 
-<!Doctype html>
+<!DOCTYPE html>
 <html lang="en-US">
 <head>
     <meta charset="utf-8" />
     <title>Modifier Mission</title>
+</head>
 <body>
     <form method="post" action="{% url 'edit_mission' mission.id %}" id="update_mission_form">
         {% csrf_token %}
         <input type="hidden" name="client_id" value="{{ mission.client.id|default_if_none:'' }}">
         <input type="hidden" name="vehicule_id" value="{{ mission.vehicule.id|default_if_none:'' }}">
         <h2>Modifier le client</h2>
-        <p>{{mission}}</p>
 
         {% if erreurs.client %}
             {% for champ, message in erreurs.client.items %}
@@ -97,10 +97,30 @@
             {% for name, label in taux %}
                 <option value="{{ name }}" {% if valeurs.taux == name|stringformat:"s" or mission_intervention_list.0.taux == name %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
-        </select>
-
-        <button type="submit">Enregistrer les modifications</button>
+        </select>        <button type="submit">Enregistrer les modifications</button>
     </form>
+      <!-- Section de suppression de la mission -->
+    <div style="margin-top: 30px; padding: 20px; border: 2px solid #ff4444; border-radius: 5px; background-color: #ffe6e6;">
+        <h3>Zone de Danger</h3>
+        <p>
+            <strong>Attention :</strong> La suppression de cette mission est irréversible et supprimera également :
+        </p>
+        <ul>
+            <li>Toutes les interventions associées ({{ mission_intervention_list|length }} intervention{{ mission_intervention_list|length|pluralize }})</li>
+            <li>Tous les liens avec les interventions</li>
+        </ul>
+        
+        <form method="post" action="{% url 'delete_mission' mission.id %}" style="display: inline;" 
+            onsubmit="return confirmDelete('{{ mission.id }}', '{{ mission.client.nom }} {{ mission.client.prenom }}', '{{ mission.vehicule.marque }} {{ mission.vehicule.modele }}', {{ mission_intervention_list|length }})">
+            {% csrf_token %}
+            <button type="submit" style="background-color: #ff4444; color: white; border: none; padding: 10px 20px; border-radius: 3px; cursor: pointer;"
+                    onmouseover="this.style.backgroundColor='#cc0000'" 
+                    onmouseout="this.style.backgroundColor='#ff4444'">
+                Supprimer définitivement cette mission
+            </button>
+        </form>
+    </div>
+    
     <a href="{% url 'list_view' %}">Retour à la liste des missions</a>
 </body>
     <script src="{% static 'js/form_mission.js' %}"></script>

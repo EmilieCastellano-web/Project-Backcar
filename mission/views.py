@@ -283,3 +283,53 @@ def update_mission_view(request, mission_id):
         'taux': [(choix.name, choix.value) for choix in Taux],
         'erreurs': erreurs,
     })
+
+def delete_mission_view(request, mission_id):
+    """Vue pour supprimer une mission avec ses relations.
+    
+    Args:
+        request: La requête HTTP
+        mission_id: L'ID de la mission à supprimer
+        
+    Returns:
+        HttpResponse: Redirection vers la liste des missions ou rendu d'erreur
+    """
+    if request.method != 'POST':
+        # Seules les requêtes POST sont autorisées pour la suppression
+        return redirect('list_view')
+    
+    # Debug pour vérifier les données de la requête
+    logging.info(f"Requête de suppression pour mission {mission_id}")
+    logging.info(f"CSRF Token présent: {'csrfmiddlewaretoken' in request.POST}")
+    logging.info(f"Headers: {dict(request.headers)}")
+    
+    try:
+        from my_airtable_api.utils.crud import delete_mission
+        from django.contrib import messages
+        
+        result = delete_mission(mission_id)
+        
+        if result['success']:
+            logging.info(f"Mission {mission_id} supprimée avec succès par l'utilisateur")
+            # Créer un message de succès pour l'afficher dans la liste
+            messages.success(request, f"Mission {mission_id} supprimée avec succès. "
+                           f"{result['nb_interventions_supprimees']} intervention(s) associée(s) supprimée(s).")
+            
+            return redirect('list_view')
+        else:
+            logging.error(f"Échec de la suppression de la mission {mission_id}: {result.get('message', 'Erreur inconnue')}")
+            return render(request, 'error.html', {
+                'error': f"Impossible de supprimer la mission: {result.get('message', 'Erreur inconnue')}"
+            })
+            
+    except ValidationError as ve:
+        logging.error(f"Erreur de validation lors de la suppression de la mission {mission_id}: {ve}")
+        return render(request, 'error.html', {
+            'error': f"Erreur lors de la suppression: {str(ve)}"
+        })
+        
+    except Exception as e:
+        logging.error(f"Erreur inattendue lors de la suppression de la mission {mission_id}: {e}")
+        return render(request, 'error.html', {
+            'error': f"Erreur inattendue lors de la suppression: {str(e)}"
+        })

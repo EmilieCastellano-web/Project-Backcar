@@ -7,6 +7,15 @@
 </head>
 <body>
 
+    <!-- Messages de succès/erreur -->
+    {% if messages %}
+        {% for message in messages %}
+            <div>
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
     <label>Liste des Missions Interventions</label>
     <table border="1">
         <thead>
