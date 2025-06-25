@@ -10,7 +10,6 @@
     <table>
         <thead>
             <tr>
-                <th>ID</th>
                 <th>Libellé</th>
                 <th>Description</th>
                 <th>Prix Unitaire</th>
@@ -25,7 +24,6 @@
         <tbody>
             {% for intervention in interventions %}
                 <tr>
-                    <td>{{ intervention.id }}</td>
                     <td>{{ intervention.libelle }}</td>
                     <td>{{ intervention.description|default:" " }}</td>
                     <td>{{ intervention.prix_unitaire }}</td>
@@ -33,7 +31,8 @@
                     <td>{{ intervention.forfait }}</td>
                     <td>{{ intervention.is_forfait|yesno:"Oui, Non" }}</td>
                     <td>{{ intervention.date_creation|date:"d/m/Y" }}</td>
-                    <td>{{ intervention.date_modification|date:"d/m/Y" }}</td>                    <td>
+                    <td>{{ intervention.date_modification|date:"d/m/Y" }}</td>                    
+                    <td>
                         <a href="{% url 'edit_intervention' intervention.id %}">Modifier</a>
                         <form method="post" action="{% url 'delete_intervention' intervention.id %}" style="display: inline;">
                             {% csrf_token %}

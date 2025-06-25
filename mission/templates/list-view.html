@@ -58,7 +58,6 @@
         <table border="1">
             <thead>
                 <tr>
-                    <th>ID Mission</th>
                     <th>Véhicule</th>
                     <th>Client</th>
                     <th>Priorité</th>
@@ -73,7 +72,6 @@
             <tbody>
                 {% for mission in missions %}
                 <tr>
-                    <td>{{ mission.id }}</td>
                     <td>{{ mission.vehicule }}</td>
                     <td>{{ mission.client }}</td>
                     <td>{{ mission.priorite }}</td>
@@ -106,7 +104,6 @@
         <table border="1">
             <thead>
                 <tr>
-                    <th>ID Véhicule</th>
                     <th>Marque</th>
                     <th>Modèle</th>
                     <th>Immatriculation</th>
@@ -124,8 +121,6 @@
             <tbody>
                 {% for vehicule in vehicules %}
                 <tr>
-
-                    <td>{{ vehicule.id }}</td>
                     <td>{{vehicule.marque }}</td>
                     <td>{{vehicule.modele }}</td>
                     <td>{{vehicule.immatriculation }}</td>

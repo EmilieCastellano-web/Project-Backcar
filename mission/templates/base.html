@@ -151,9 +151,12 @@
                                 <li><a href="{% url 'list_interventions_view' %}">
                                     Interventions
                                 </a></li>
-                                <li><a href="{% url 'logout' %}">
-                                    Déconnexion
-                                </a></li>
+                                <li>
+                                    <form method="post" action="{% url 'logout' %}">
+                                        {% csrf_token %}
+                                        <button type="submit">Se déconnecter</button>
+                                    </form>
+                                </li>
                             </ul>
                         </li>
                     {% else %}
@@ -170,7 +173,8 @@
     {% if messages %}
         <div class="messages-container">
             {% for message in messages %}
-                <div class="message message-{{ message.tags }}" id="message-{{ forloop.counter }}">                    <span class="message-icon">
+                <div class="message message-{{ message.tags }}" id="message-{{ forloop.counter }}">
+                    <span class="message-icon">
                         {% if message.tags == 'error' %}
                             ✗
                         {% elif message.tags == 'success' %}
@@ -181,7 +185,8 @@
                             i
                         {% endif %}
                     </span>
-                    <span class="message-text">{{ message }}</span>                    <button class="message-close" onclick="closeMessage('message-{{ forloop.counter }}')" title="Fermer">
+                    <span class="message-text">{{ message }}</span>
+                        <button class="message-close" onclick="closeMessage('message-{{ forloop.counter }}')" title="Fermer">
                         ×
                     </button>
                 </div>
@@ -251,7 +256,8 @@
             const messagesContainer = document.querySelector('.messages-container') || 
                                     createMessagesContainer();
             
-            const messageId = 'js-message-' + Date.now();            const icons = {
+            const messageId = 'js-message-' + Date.now();            
+            const icons = {
                 'success': '✓',
                 'error': '✗', 
                 'warning': '!',
@@ -268,7 +274,7 @@
             
             messagesContainer.insertAdjacentHTML('beforeend', messageHTML);
             
-            // Auto-hide
+            // Auto-hide  the message after a delay
             const delay = type === 'error' ? 8000 : 5000;
             setTimeout(() => {
                 closeMessage(messageId);
