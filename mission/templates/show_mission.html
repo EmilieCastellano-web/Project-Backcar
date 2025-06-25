@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Mission Details{% endblock %}
+
+{% block content %}
+    <h2>Mission Details</h2>
+    
+    <div>
+        <p><strong>Client:</strong> </p>
+        <p><strong>Nom:</strong> {{ client.nom }}</p>
+        <p><strong>Prénom:</strong> {{ client.prenom }}</p>
+        <p><strong>Email:</strong> {{ client.email }}</p>
+        <p><strong>Société:</strong> {{ client.societe|default:" " }}</p>
+        <p><strong>Téléphone:</strong> {{ client.telephone }}</p>   
+        <p><strong>Adresse:</strong> {{ client.adresse }}</p>
+        <p><strong>Code Postal:</strong> {{ client.code_postal }}</p>
+        <p><strong>Ville:</strong> {{ client.ville }}</p>
+    </div>
+    <br><br>
+    <div>
+        <p><strong>Véhicule:</strong> </p>
+        <p><strong>Marque:</strong> {{ vehicule.marque }}</p>
+        <p><strong>Modèle:</strong> {{ vehicule.modele }}</p>
+        <p><strong>Immatriculation:</strong> {{ vehicule.immatriculation }}</p>
+        <p><strong>Mise en circulation:</strong> {{ vehicule.mise_circulation }}</p>
+        <p><strong>Kilométrage:</strong> {{ vehicule.kilometrage }}</p>
+        <p><strong>Carburant:</strong> {{ vehicule.carburant }}</p>
+        <p><strong>Boîte de vitesses:</strong> {{ vehicule.boite_vitesse }}</p>
+        <p><strong>Numéro de série:</strong> {{ vehicule.numero_serie }}</p>
+        <p><strong>Remarque:</strong> {{ vehicule.remarque|default:" " }}</p>
+        <p><strong>VO:</strong> {{ vehicule.vo|yesno:"Oui, Non" }}</p>
+    </div>
+    <br><br>
+    <div>
+        <p><strong>Mission:</strong></p>
+        <p><strong>Remarque:</strong> {{ mission.remarque|default:" " }}</p>
+        <p><strong>Interventions:</strong></p>
+        {% for intervention in mission.interventions %}
+            <p>{{ intervention.libelle }} - Prix: {{ intervention.prix_unitaire }} € - Forfait: {{ intervention.forfait }} € -
+                Is forfait: {{intervention.is_forfait|yesno:"Oui, Non" }} - Durée: {{ intervention.duree_intervention|default:" " }}</p>
+        {% empty %}
+            <p>Aucune intervention associée.</p>
+        {% endfor %}
+        <p><strong>Priorité:</strong> {{ mission.priorite }}</p>
+
+    </div>
+    <br><br>
+    <div>
+        <a href="{% url 'list_view' %}">Back to Missions List</a>
+    </div>
+{% endblock %}

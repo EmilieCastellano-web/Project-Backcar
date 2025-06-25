@@ -1,16 +1,17 @@
 from django.shortcuts import render
-from .models import Client, Vehicule, Intervention, MissionIntervention, Priorite, Taux
 from django.shortcuts import render, redirect
 import logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(message)s')
 from django.db import transaction
 from django.db.models import Q
 from datetime import datetime
-from my_airtable_api.utils.error_manage import handle_template_errors, render_with_error_handling
+from django.contrib.auth.decorators import login_required
+from django.forms.models import model_to_dict
 
+from .models import Client, Vehicule, Intervention, MissionIntervention, Priorite, Taux
+from my_airtable_api.utils.error_manage import handle_template_errors, render_with_error_handling
 from my_airtable_api.utils.crud import create_taches, create_client, create_vehicule, get_client_by_id, get_vehicule_by_id, get_all_mission_intervention_by_id, get_mission_by_id, update_taches
 from my_airtable_api.utils.extract_data import ValidationError, extract_data_client, extract_data_vehicule, extract_data_intervention, extract_data_mission, extract_data_mission_intervention
-from django.contrib.auth.decorators import login_required
 
 @login_required
 def list_view(request):
@@ -79,7 +80,6 @@ def list_view(request):
         if mission_id not in missions_group:
             missions_group[mission_id] = {
                 'id': mission.id,
-                'id_mission_intervention': mi.id,
                 'date_demande': mission.date_demande,
                 'remarque': mission.remarque,
                 'priorite': mission.priorite.replace('_', ' ').title(),
@@ -419,3 +419,36 @@ def delete_mission_view(request, mission_id):
             'template_error': True,
             'error_type': 'template_render_error'
         })
+        
+@login_required
+def show_mission_view(request, mission_id):
+    """Affiche les détails d'une mission spécifique.
+
+    Args:
+        request: La requête HTTP
+        mission_id: L'ID de la mission à afficher
+    Returns:
+        HttpResponse: La réponse HTTP contenant le rendu du template avec les détails de la mission
+    """
+    mission = get_mission_by_id(mission_id)
+    if not mission:
+        logging.error(f"Mission with id {mission_id} does not exist.")
+        return render_with_error_handling(request, 'error.html', {
+            'error': f"Mission with id {mission_id} does not exist.",
+            'template_error': True,
+            'error_type': 'template_render_error'
+        })
+
+    client =  model_to_dict(mission.client)
+    vehicule = model_to_dict(mission.vehicule)
+    mission_intervention =  get_all_mission_intervention_by_id(mission_id)
+    mission_intervention = [model_to_dict(intervention) for intervention in mission_intervention]
+    mission = model_to_dict(mission)
+
+    logging.info(f"Mission data retrieved for id {mission_id}: {mission}")
+    return render(request, 'show_mission.html', {
+        'mission': mission,
+        'client': client,
+        'vehicule': vehicule,
+        'mission_intervention': mission_intervention
+    })
