@@ -31,8 +31,6 @@ exec(open('mission/script/populate_db.py', encoding='utf-8').read())
 python -c "import os; os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'my_airtable_api.settings'); import django; django.setup(); exec(open('mission/script/populate_db.py', encoding='utf-8').read())"
 ```
 
-### Utilisation
-
 ### Prérequis
 
 Assurez-vous que votre environnement de base de données est démarré :

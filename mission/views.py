@@ -10,8 +10,9 @@ from my_airtable_api.utils.error_manage import handle_template_errors, render_wi
 
 from my_airtable_api.utils.crud import create_taches, create_client, create_vehicule, get_client_by_id, get_vehicule_by_id, get_all_mission_intervention_by_id, get_mission_by_id, update_taches
 from my_airtable_api.utils.extract_data import ValidationError, extract_data_client, extract_data_vehicule, extract_data_intervention, extract_data_mission, extract_data_mission_intervention
+from django.contrib.auth.decorators import login_required
 
-
+@login_required
 def list_view(request):
     """"Affiche la liste des missions, véhicules et clients avec filtrage.
     Cette vue récupère les données des missions, véhicules et clients depuis la base de données
@@ -140,11 +141,13 @@ def list_view(request):
             'nom': client.nom,
             'prenom': client.prenom,
             'email': client.email,
+            'societe': client.societe,
             'telephone': client.telephone,
             'adresse': client.adresse,
             'code_postal': client.code_postal,
             'ville': client.ville,
-            'vehicules': []        }
+            'vehicules': []
+        }
         for vehicule in vehicules:
             if vehicule['client'] == f"{client.nom} {client.prenom}":
                 clients_group[client.id]['vehicules'].append(vehicule)
@@ -172,6 +175,7 @@ def list_view(request):
         })
     
 @handle_template_errors()
+@login_required
 def mission_form_view(request):
     """Affiche le formulaire de création d'une nouvelle mission.
     Cette vue gère l'affichage du formulaire pour créer une nouvelle mission.
@@ -259,6 +263,7 @@ def mission_form_view(request):
             'taux': [(choix.name, choix.value) for choix in Taux]
         })
 
+@login_required
 def update_mission_view(request, mission_id):
     """Affiche le formulaire de mise à jour d'une mission existante.
     Cette vue gère l'affichage du formulaire pour mettre à jour une mission existante.
@@ -362,6 +367,7 @@ def update_mission_view(request, mission_id):
         'erreurs': erreurs,
     })
 
+@login_required
 def delete_mission_view(request, mission_id):
     """Vue pour supprimer une mission avec ses relations.
     

@@ -1,0 +1,115 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Gestion des Missions{% endblock %}</title>
+  
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>    <!-- Navigation -->
+    <nav>
+        <div>
+            <a href="{% url 'list_view' %}">
+                Liste des Missions
+            </a>
+            
+            <div>
+                <ul>
+                    {% comment %} <li>
+                        <a href="{% url 'mission_list_view' %}">
+                            Liste des Missions
+                        </a>
+                    </li> {% endcomment %}
+                    <li>
+                        <a href="{% url 'mission_form_view' %}">
+                            Nouvelle Mission
+                        </a>
+                    </li>
+                </ul>
+                
+                <ul>
+                    {% if user.is_authenticated %}
+                        <li>
+                            <a href="#">
+                                {{ user.username }}
+                            </a>
+                            <ul>
+                                <li><a href="{% url 'admin:index' %}">
+                                    Administration
+                                </a></li>
+                                <li><a href="{% url 'logout' %}">
+                                    Déconnexion
+                                </a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li>
+                            <a href="{% url 'login' %}">
+                                Connexion
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>    <!-- Messages Flash -->
+    {% if messages %}
+        <div>
+            {% for message in messages %}
+                <div>
+                    {% if message.tags == 'error' %}
+                        Erreur: 
+                    {% elif message.tags == 'success' %}
+                        Succès: 
+                    {% elif message.tags == 'warning' %}
+                        Attention: 
+                    {% else %}
+                        Info: 
+                    {% endif %}
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>    {% endif %}
+
+    <!-- Contenu Principal -->
+    <div>
+        {% block breadcrumb %}{% endblock %}
+        
+        {% block content %}
+        <div>
+            <div>
+                <h1>Bienvenue dans la gestion des missions</h1>
+                <p>Utilisez le menu de navigation pour accéder aux différentes fonctionnalités.</p>
+            </div>
+        </div>
+        {% endblock %}
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div>
+            <small>&copy; {% now "Y" %} Gestion des Missions - Tous droits réservés</small>
+        </div>
+    </footer>
+    
+    {% block extra_js %}{% endblock %}
+      <!-- Custom JavaScript -->
+    <script>
+        // Auto-hide alerts after 5 seconds
+        setTimeout(function() {
+            var alerts = document.querySelectorAll('div');
+            alerts.forEach(function(alert) {
+                if (alert.textContent.includes('Erreur:') || 
+                    alert.textContent.includes('Succès:') || 
+                    alert.textContent.includes('Attention:') || 
+                    alert.textContent.includes('Info:')) {
+                    alert.style.display = 'none';
+                }
+            });
+        }, 5000);
+    </script>
+</body>
+</html>

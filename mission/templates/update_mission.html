@@ -1,129 +1,127 @@
+{% extends 'base.html' %}
 {% load static %}
 
-<!DOCTYPE html>
-<html lang="en-US">
-<head>
-    <meta charset="utf-8" />
-    <title>Modifier Mission</title>
-</head>
-<body>
+{% block title %}Modifier Mission{% endblock %}
+
+{% block content %}
     <form method="post" action="{% url 'edit_mission' mission.id %}" id="update_mission_form">
-        {% csrf_token %}
-        <input type="hidden" name="client_id" value="{{ mission.client.id|default_if_none:'' }}">
-        <input type="hidden" name="vehicule_id" value="{{ mission.vehicule.id|default_if_none:'' }}">
-        <h2>Modifier le client</h2>
-
-        {% if erreurs.client %}
-            {% for champ, message in erreurs.client.items %}
-                <p style="color:red;">{{ message }}</p>
-            {% endfor %} 
-        {% endif %}
-
-        <label for="nom">Nom:</label>
-        <input type="text" id="nom" name="nom" value="{{ mission.client.nom|default_if_none:'' }}">
-        <label for="societe">Société:</label>
-        <input type="text" id="societe" name="societe" value="{{ mission.client.societe|default_if_none:'' }}">
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email" value="{{ mission.client.email|default_if_none:'' }}">
-        <label for="telephone">Téléphone:</label>
-        <input type="text" id="telephone" name="telephone" value="{{ mission.client.telephone|default_if_none:'' }}">
-        <label for="adresse">Adresse:</label>
-        <input type="text" id="adresse" name="adresse" value="{{ mission.client.adresse|default_if_none:'' }}">
-        <label for="code_postal">Code Postal:</label>
-        <input type="text" id="code_postal" name="code_postal" value="{{ mission.client.code_postal|default_if_none:'' }}">
-        <label for="ville">Ville:</label>
-        <input type="text" id="ville" name="ville" value="{{ mission.client.ville|default_if_none:'' }}">
-        
-        <h2>Modifier le véhicule</h2>
-        {% if erreurs.vehicule %}
-            {% for champ, message in erreurs.vehicule.items %}
-                <p style="color:red;">{{ message }}</p>
-            {% endfor %}
-        {% endif %}  
-
-        <label for="kilometrage">Kilométrage:</label>
-        <input type="number" id="kilometrage" name="kilometrage" value="{{ mission.vehicule.kilometrage|default_if_none:'' }}">       
-        <label for="remarque _vehicule">Remarque:</label>
-        <textarea id="remarque_vehicule" name="remarque_vehicule" rows="4" cols="50"></textarea>        
-        <label for="vo">Véhicule d'Occasion:</label>
-        <input type="checkbox" id="vo" name="vo" {% if mission.vehicule.vo %}checked{% endif %}>
-
-        <h2>Modifier les interventions</h2>
-        {% if erreurs.intervention %}
-            {% for champ, message in erreurs.intervention.items %}
-                <p style="color:red;">{{ message }}</p>
-            {% endfor %}
-        {% endif %}
-
-        <label for="intervention">Intervention :</label>
-        <select id="intervention-select">
-            <option value="">-- Choisis une intervention --</option>
-            {% for intervention in interventions %}
-                <option value="{{ intervention.id }}">{{ intervention.libelle }}</option>            
-            {% endfor %}
-        </select>
-        
-        <div class="interventions-section">
-            <h3>Nouvelles interventions à ajouter :</h3>
-            <ul id="interventions-list"></ul>
-            <input type="hidden" name="interventions" id="interventions-hidden">
-            <h3>Interventions actuelles :</h3>
-            <ul id="interventions-actuelles-list">
-                {% for mi in mission_intervention_list %}
-                    <li>
-                        {{ mi.libelle }}
-                        <button type="button" class="remove-intervention" data-id="{{ mi.id_intervention }}">Supprimer</button>
-                    </li>
-                {% endfor %}
-            </ul>
-            <input type="hidden" id="interventions-actuelles-hidden" value="{% for mi in mission_intervention_list %}{{ mi.id_intervention }}{% if not forloop.last %},{% endif %}{% endfor %}">
-        </div>
-        <h2>Modifier la mission</h2>
-
-        {% if erreurs.mission %}
-            {% for champ, message in erreurs.mission.items %}
-                <p style="color:red;">{{ message }}</p>
-            {% endfor %}
-        {% endif %}        <label for="priorite">Priorité :</label>
-        <select id="priorite" name="priorite" required>
-            <option value="">-- Choisis une priorité --</option>
-            {% for name, label in priorites %}
-                <option value="{{ name }}" {% if valeurs.priorite == name|stringformat:"s" or mission.priorite == name %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-        </select>        <label for="_mission">Remarque :</label>
-        <textarea id="remarque_mission" name="remarque_mission" rows="4" cols="50"></textarea><label for="taux">Taux :</label>
-        <select id="taux" name="taux" required>
-            <option value="">-- Choisis un taux --</option>
-            {% for name, label in taux %}
-                <option value="{{ name }}" {% if valeurs.taux == name|stringformat:"s" or mission_intervention_list.0.taux == name %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-        </select>        
-        <button type="submit">Enregistrer les modifications</button>
-    </form>
-      <!-- Section de suppression de la mission -->
-    <div style="margin-top: 30px; padding: 20px; border: 2px solid #ff4444; border-radius: 5px; background-color: #ffe6e6;">
-        <h3>Zone de Danger</h3>
-        <p>
-            <strong>Attention :</strong> La suppression de cette mission est irréversible et supprimera également :
-        </p>
-        <ul>
-            <li>Toutes les interventions associées ({{ mission_intervention_list|length }} intervention{{ mission_intervention_list|length|pluralize }})</li>
-            <li>Tous les liens avec les interventions</li>
-        </ul>
-        
-        <form method="post" action="{% url 'delete_mission' mission.id %}" style="display: inline;" 
-            onsubmit="return confirmDelete('{{ mission.id }}', '{{ mission.client.nom }} {{ mission.client.prenom }}', '{{ mission.vehicule.marque }} {{ mission.vehicule.modele }}', {{ mission_intervention_list|length }})">
             {% csrf_token %}
-            <button type="submit" style="background-color: #ff4444; color: white; border: none; padding: 10px 20px; border-radius: 3px; cursor: pointer;"
-                    onmouseover="this.style.backgroundColor='#cc0000'" 
-                    onmouseout="this.style.backgroundColor='#ff4444'">
-                Supprimer définitivement cette mission
-            </button>
-        </form>
-    </div>
-    
-    <a href="{% url 'list_view' %}">Retour à la liste des missions</a>
-</body>
-    <script src="{% static 'js/form_mission.js' %}"></script>
+            <input type="hidden" name="client_id" value="{{ mission.client.id|default_if_none:'' }}">
+            <input type="hidden" name="vehicule_id" value="{{ mission.vehicule.id|default_if_none:'' }}">
+            <h2>Modifier le client</h2>
 
-</html>
+            {% if erreurs.client %}
+                {% for champ, message in erreurs.client.items %}
+                    <p style="color:red;">{{ message }}</p>
+                {% endfor %} 
+            {% endif %}
+
+            <label for="nom">Nom:</label>
+            <input type="text" id="nom" name="nom" value="{{ mission.client.nom|default_if_none:'' }}">
+            <label for="societe">Société:</label>
+            <input type="text" id="societe" name="societe" value="{{ mission.client.societe|default_if_none:'' }}">
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" value="{{ mission.client.email|default_if_none:'' }}">
+            <label for="telephone">Téléphone:</label>
+            <input type="text" id="telephone" name="telephone" value="{{ mission.client.telephone|default_if_none:'' }}">
+            <label for="adresse">Adresse:</label>
+            <input type="text" id="adresse" name="adresse" value="{{ mission.client.adresse|default_if_none:'' }}">
+            <label for="code_postal">Code Postal:</label>
+            <input type="text" id="code_postal" name="code_postal" value="{{ mission.client.code_postal|default_if_none:'' }}">
+            <label for="ville">Ville:</label>
+            <input type="text" id="ville" name="ville" value="{{ mission.client.ville|default_if_none:'' }}">
+            
+            <h2>Modifier le véhicule</h2>
+            {% if erreurs.vehicule %}
+                {% for champ, message in erreurs.vehicule.items %}
+                    <p style="color:red;">{{ message }}</p>
+                {% endfor %}
+            {% endif %}  
+
+            <label for="kilometrage">Kilométrage:</label>
+            <input type="number" id="kilometrage" name="kilometrage" value="{{ mission.vehicule.kilometrage|default_if_none:'' }}">       
+            <label for="remarque _vehicule">Remarque:</label>
+            <textarea id="remarque_vehicule" name="remarque_vehicule" rows="4" cols="50"></textarea>        
+            <label for="vo">Véhicule d'Occasion:</label>
+            <input type="checkbox" id="vo" name="vo" {% if mission.vehicule.vo %}checked{% endif %}>
+
+            <h2>Modifier les interventions</h2>
+            {% if erreurs.intervention %}
+                {% for champ, message in erreurs.intervention.items %}
+                    <p style="color:red;">{{ message }}</p>
+                {% endfor %}
+            {% endif %}
+
+            <label for="intervention">Intervention :</label>
+            <select id="intervention-select">
+                <option value="">-- Choisis une intervention --</option>
+                {% for intervention in interventions %}
+                    <option value="{{ intervention.id }}">{{ intervention.libelle }}</option>            
+                {% endfor %}
+            </select>
+            
+            <div class="interventions-section">
+                <h3>Nouvelles interventions à ajouter :</h3>
+                <ul id="interventions-list"></ul>
+                <input type="hidden" name="interventions" id="interventions-hidden">
+                <h3>Interventions actuelles :</h3>
+                <ul id="interventions-actuelles-list">
+                    {% for mi in mission_intervention_list %}
+                        <li>
+                            {{ mi.libelle }}
+                            <button type="button" class="remove-intervention" data-id="{{ mi.id_intervention }}">Supprimer</button>
+                        </li>
+                    {% endfor %}
+                </ul>
+                <input type="hidden" id="interventions-actuelles-hidden" value="{% for mi in mission_intervention_list %}{{ mi.id_intervention }}{% if not forloop.last %},{% endif %}{% endfor %}">
+            </div>
+            <h2>Modifier la mission</h2>
+
+            {% if erreurs.mission %}
+                {% for champ, message in erreurs.mission.items %}
+                    <p style="color:red;">{{ message }}</p>
+                {% endfor %}
+            {% endif %}        <label for="priorite">Priorité :</label>
+            <select id="priorite" name="priorite" required>
+                <option value="">-- Choisis une priorité --</option>
+                {% for name, label in priorites %}
+                    <option value="{{ name }}" {% if valeurs.priorite == name|stringformat:"s" or mission.priorite == name %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>        <label for="_mission">Remarque :</label>
+            <textarea id="remarque_mission" name="remarque_mission" rows="4" cols="50"></textarea><label for="taux">Taux :</label>
+            <select id="taux" name="taux" required>
+                <option value="">-- Choisis un taux --</option>
+                {% for name, label in taux %}
+                    <option value="{{ name }}" {% if valeurs.taux == name|stringformat:"s" or mission_intervention_list.0.taux == name %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>        
+            <button type="submit">Enregistrer les modifications</button>
+        </form>
+        <!-- Section de suppression de la mission -->
+        <div style="margin-top: 30px; padding: 20px; border: 2px solid #ff4444; border-radius: 5px; background-color: #ffe6e6;">
+            <h3>Zone de Danger</h3>
+            <p>
+                <strong>Attention :</strong> La suppression de cette mission est irréversible et supprimera également :
+            </p>
+            <ul>
+                <li>Toutes les interventions associées ({{ mission_intervention_list|length }} intervention{{ mission_intervention_list|length|pluralize }})</li>
+                <li>Tous les liens avec les interventions</li>
+            </ul>
+            
+            <form method="post" action="{% url 'delete_mission' mission.id %}" style="display: inline;" 
+                onsubmit="return confirmDelete('{{ mission.id }}', '{{ mission.client.nom }} {{ mission.client.prenom }}', '{{ mission.vehicule.marque }} {{ mission.vehicule.modele }}', {{ mission_intervention_list|length }})">
+                {% csrf_token %}
+                <button type="submit" style="background-color: #ff4444; color: white; border: none; padding: 10px 20px; border-radius: 3px; cursor: pointer;"
+                        onmouseover="this.style.backgroundColor='#cc0000'" 
+                        onmouseout="this.style.backgroundColor='#ff4444'">
+                    Supprimer définitivement cette mission
+                </button>
+            </form>
+        </div>        
+        <a href="{% url 'list_view' %}">Retour à la liste des missions</a>
+    </form>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/form_mission.js' %}"></script>
+{% endblock %}

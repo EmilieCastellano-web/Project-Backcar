@@ -57,7 +57,7 @@ ROOT_URLCONF = 'my_airtable_api.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'my_airtable_api/templates')],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -111,7 +111,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# TEMPLATE_ERROR = 'errors_template.html'
+LOGIN_URL = '/'
+LOGIN_REDIRECT_URL = '/missions/'  # ou la page d'accueil après connexion
+LOGOUT_REDIRECT_URL = '/'  # ou la page de connexion après déconnexion
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
