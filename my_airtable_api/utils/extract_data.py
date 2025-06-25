@@ -1,6 +1,6 @@
 from datetime import datetime
 import logging
-from mission.models import Intervention, Taux, Vehicule, Client, Mission
+from mission.models import Intervention, Taux, Vehicule, Client
 
 class ValidationError(Exception):
     def __init__(self, message, field=None, details=None):

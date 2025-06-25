@@ -325,6 +325,20 @@ def get_all_mission_intervention_by_id(mission_id):
         logging.error(f"Mission intervention with id {mission_id} does not exist.")
         return None
     
+def get_all_interventions():
+    """Récupère toutes les interventions.
+    
+    Returns:
+        QuerySet: Un queryset contenant toutes les interventions.
+    """
+    try:
+        interventions = Intervention.objects.all()
+        logging.info(f"All interventions retrieved: {interventions.count()} found.")
+        return interventions
+    except Exception as e:
+        logging.error(f"Error retrieving all interventions: {e}")
+        raise ValidationError("Erreur lors de la récupération des interventions.")    
+
 def get_mission_by_id(mission_id):
     """Récupère une mission par son ID.
     Args:

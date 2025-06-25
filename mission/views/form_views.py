@@ -1,179 +1,17 @@
-from django.shortcuts import render
-from django.shortcuts import render, redirect
-import logging
-logging.basicConfig(level=logging.INFO, format='%(levelname)s:%(message)s')
-from django.db import transaction
-from django.db.models import Q
-from datetime import datetime
-from django.contrib.auth.decorators import login_required
-from django.forms.models import model_to_dict
-
-from .models import Client, Vehicule, Intervention, MissionIntervention, Priorite, Taux
-from my_airtable_api.utils.error_manage import handle_template_errors, render_with_error_handling
-from my_airtable_api.utils.crud import create_taches, create_client, create_vehicule, get_client_by_id, get_vehicule_by_id, get_all_mission_intervention_by_id, get_mission_by_id, update_taches
 from my_airtable_api.utils.extract_data import ValidationError, extract_data_client, extract_data_vehicule, extract_data_intervention, extract_data_mission, extract_data_mission_intervention
+from my_airtable_api.utils.crud import create_taches, get_all_mission_intervention_by_id, create_client, create_vehicule, get_client_by_id, get_vehicule_by_id, get_mission_by_id, update_taches, get_all_interventions
+from my_airtable_api.utils.error_manage import handle_template_errors, render_with_error_handling
+from mission.models import Client, Vehicule, Intervention, Priorite, Taux
+from mission.form import InterventionForm
 
-@login_required
-def list_view(request):
-    """"Affiche la liste des missions, véhicules et clients avec filtrage.
-    Cette vue récupère les données des missions, véhicules et clients depuis la base de données
-    et les organise pour les afficher dans un template. Supporte le filtrage par client, véhicule, priorité et date.
-    Returns:
-        HttpResponse: La réponse HTTP contenant le rendu du template avec les données des missions, véhicules et clients.
-    """
-    # Récupération des paramètres de filtrage
-    filter_client = request.GET.get('client-filtrage', '')
-    filter_vehicule = request.GET.get('vehicule-filtrage', '')
-    filter_priorite = request.GET.get('priorite-filtrage', '')
-    filter_date_debut = request.GET.get('date_debut', '')
-    filter_date_fin = request.GET.get('date_fin', '')
-    
-    # Construction de la requête avec filtres
-    missions_interventions_query = MissionIntervention.objects.select_related(
-        'mission', 'mission__vehicule', 'mission__client', 'intervention'
-    )
-    
-    # Q -> permet d’écrire des filtres avec des conditions "OU" (|) et "NON" (~), ou de combiner plusieurs conditions.
-    # Application des filtres
-    if filter_client:
-        missions_interventions_query = missions_interventions_query.filter(
-            Q(mission__client__nom__icontains=filter_client) | 
-            Q(mission__client__prenom__icontains=filter_client)
-        )
-    
-    if filter_vehicule:
-        missions_interventions_query = missions_interventions_query.filter(
-            Q(mission__vehicule__marque__icontains=filter_vehicule) |
-            Q(mission__vehicule__modele__icontains=filter_vehicule) |
-            Q(mission__vehicule__immatriculation__icontains=filter_vehicule)
-        )
-    
-    if filter_priorite:
-        missions_interventions_query = missions_interventions_query.filter(
-            mission__priorite=filter_priorite
-        )
-    
-    if filter_date_debut:
-        try:
-            date_debut = datetime.strptime(filter_date_debut, '%Y-%m-%d').date()
-            missions_interventions_query = missions_interventions_query.filter(
-                mission__date_demande__date__gte=date_debut
-            )
-        except ValueError:
-            pass  # Ignorer les dates mal formatées
-    
-    if filter_date_fin:
-        try:
-            date_fin = datetime.strptime(filter_date_fin, '%Y-%m-%d').date()
-            missions_interventions_query = missions_interventions_query.filter(
-                mission__date_demande__date__lte=date_fin
-            )
-        except ValueError:
-            pass  # Ignorer les dates mal formatées
-    
-    missions_interventions = missions_interventions_query.all()
-    
-    missions_group = {}
-    for mi in missions_interventions:
-        mission = mi.mission
-        mission_id = mission.id
-        if mission_id not in missions_group:
-            missions_group[mission_id] = {
-                'id': mission.id,
-                'date_demande': mission.date_demande,
-                'remarque': mission.remarque,
-                'priorite': mission.priorite.replace('_', ' ').title(),
-                'taux': mi.taux.title(),
-                'vehicule': f"{mission.vehicule.marque} {mission.vehicule.modele} {mission.vehicule.immatriculation}",
-                'client': f"{mission.client.nom} {mission.client.prenom}",
-                'cout_total': mi.cout_total,
-                'interventions': []
-            }
-        missions_group[mission_id]['interventions'].append({
-            'libelle': mi.intervention.libelle,
-            'prix_unitaire': mi.intervention.prix_unitaire,
-        })
-        missions_group[mission_id]['cout_total'] += mi.cout_total
-        
-        
-    missions = list(missions_group.values())
-    
-    
-    # Récupération de la table Véhicule avec les relations nécessaires
-    vehicules = Vehicule.objects.all()
-    vehicules_group = {}
-    for vehicule in vehicules:
-        vehicules_group[vehicule.id] = {
-            'id': vehicule.id,
-            'marque': vehicule.marque,
-            'modele': vehicule.modele,
-            'immatriculation': vehicule.immatriculation,
-            'numero_serie': vehicule.numero_serie,
-            'mise_circulation': vehicule.mise_circulation,
-            'kilometrage': vehicule.kilometrage,
-            'remarque': vehicule.remarque,
-            'client': f"{vehicule.client.nom} {vehicule.client.prenom}",
-            'vo': vehicule.vo,
-            'boite_vitesse': vehicule.boite_vitesse,
-            'carburant': vehicule.carburant
-        }
-        for mi in missions_interventions:
-            if mi.mission.vehicule.id == vehicule.id:
-                vehicules_group[vehicule.id]['missions'] = vehicules_group[vehicule.id].get('missions', [])
-                vehicules_group[vehicule.id]['missions'].append({
-                    'id': mi.mission.id,
-                    'date_demande': mi.mission.date_demande,
-                    'priorite': mi.mission.priorite,
-                    'cout_total': mi.cout_total,
-                    'interventions': [
-                        {
-                            'libelle': mi.intervention.libelle
-                        }
-                    ]
-                })
-    vehicules = list(vehicules_group.values())  
-    # Récupération de la table Client
-    clients = Client.objects.all()
-    clients_group = {}
-    for client in clients:
-        clients_group[client.id] = {
-            'id': client.id,
-            'nom': client.nom,
-            'prenom': client.prenom,
-            'email': client.email,
-            'societe': client.societe,
-            'telephone': client.telephone,
-            'adresse': client.adresse,
-            'code_postal': client.code_postal,
-            'ville': client.ville,
-            'vehicules': []
-        }
-        for vehicule in vehicules:
-            if vehicule['client'] == f"{client.nom} {client.prenom}":
-                clients_group[client.id]['vehicules'].append(vehicule)
-    clients = list(clients_group.values())
-    
-    # Préparation des données pour les filtres
-    all_clients = Client.objects.all().order_by('nom', 'prenom')
-    all_vehicules = Vehicule.objects.all().order_by('marque', 'modele')
-    priorites_choices = [(choix.name, choix.value) for choix in Priorite]
-    
-    return render(request, 'list-view.html', {
-        'missions': missions,
-        'vehicules': vehicules,
-        'clients': clients,
-        # Données pour les filtres
-        'all_clients': all_clients,
-        'all_vehicules': all_vehicules,
-        'priorites_choices': priorites_choices,
-        # Valeurs actuelles des filtres
-        'filter_client': filter_client,
-        'filter_vehicule': filter_vehicule,
-        'filter_priorite': filter_priorite,
-        'filter_date_debut': filter_date_debut,
-        'filter_date_fin': filter_date_fin,
-        })
-    
+import logging
+from django.contrib.auth.decorators import login_required
+from django.db import transaction
+from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+
+
 @handle_template_errors()
 @login_required
 def mission_form_view(request):
@@ -262,7 +100,6 @@ def mission_form_view(request):
             'priorites': [(choix.name, choix.value) for choix in Priorite],
             'taux': [(choix.name, choix.value) for choix in Taux]
         })
-
 @login_required
 def update_mission_view(request, mission_id):
     """Affiche le formulaire de mise à jour d'une mission existante.
@@ -419,36 +256,106 @@ def delete_mission_view(request, mission_id):
             'template_error': True,
             'error_type': 'template_render_error'
         })
-        
+    
+
+
 @login_required
-def show_mission_view(request, mission_id):
-    """Affiche les détails d'une mission spécifique.
-
-    Args:
-        request: La requête HTTP
-        mission_id: L'ID de la mission à afficher
-    Returns:
-        HttpResponse: La réponse HTTP contenant le rendu du template avec les détails de la mission
-    """
-    mission = get_mission_by_id(mission_id)
-    if not mission:
-        logging.error(f"Mission with id {mission_id} does not exist.")
-        return render_with_error_handling(request, 'error.html', {
-            'error': f"Mission with id {mission_id} does not exist.",
-            'template_error': True,
-            'error_type': 'template_render_error'
-        })
-
-    client =  model_to_dict(mission.client)
-    vehicule = model_to_dict(mission.vehicule)
-    mission_intervention =  get_all_mission_intervention_by_id(mission_id)
-    mission_intervention = [model_to_dict(intervention) for intervention in mission_intervention]
-    mission = model_to_dict(mission)
-
-    logging.info(f"Mission data retrieved for id {mission_id}: {mission}")
-    return render(request, 'show_mission.html', {
-        'mission': mission,
-        'client': client,
-        'vehicule': vehicule,
-        'mission_intervention': mission_intervention
+def create_intervention_view(request):
+    """Vue pour créer une nouvelle intervention"""
+    if request.method == 'POST':
+        form = InterventionForm(request.POST)
+        if form.is_valid():
+            intervention = form.save()
+            messages.success(request, f'Intervention "{intervention.libelle}" créée avec succès!')
+            return redirect('list_interventions_view')
+    else:
+        form = InterventionForm()
+    
+    return render(request, 'intervention_form.html', {
+        'form': form,
+        'title': 'Créer une intervention',
+        'action': 'Créer'
     })
+
+
+@login_required
+def update_intervention_view(request, intervention_id):
+    """Vue pour modifier une intervention existante"""
+    intervention = get_object_or_404(Intervention, id=intervention_id)
+    
+    if request.method == 'POST':
+        form = InterventionForm(request.POST, instance=intervention)
+        if form.is_valid():
+            intervention = form.save()
+            messages.success(request, f'Intervention "{intervention.libelle}" modifiée avec succès!')
+            return redirect('list_interventions_view')
+    else:
+        form = InterventionForm(instance=intervention)
+    
+    return render(request, 'intervention_form.html', {
+        'form': form,
+        'title': 'Modifier une intervention',
+        'action': 'Modifier',
+        'intervention': intervention
+    })
+
+
+@login_required
+def delete_intervention_view(request, intervention_id):
+    """Vue pour supprimer une intervention avec vérifications sécurisées
+    
+    Sécurités implémentées:
+    - Vérification méthode POST uniquement
+    - Protection CSRF automatique via décorateur
+    - Vérification des relations avec les missions
+    - Transaction atomique
+    - Logging de sécurité
+    - Gestion d'erreurs robuste
+    """
+    # Sécurité : seules les requêtes POST sont autorisées
+    if request.method != 'POST':
+        logging.warning(f"Tentative de suppression d'intervention {intervention_id} avec méthode {request.method} par utilisateur {request.user.username}")
+        messages.error(request, "Méthode non autorisée pour la suppression.")
+        return redirect('list_interventions_view')
+    
+    try:
+        # Récupération sécurisée de l'intervention
+        intervention = get_object_or_404(Intervention, id=intervention_id)
+        intervention_name = intervention.libelle
+        
+        # Vérification des relations - est-ce que l'intervention est utilisée dans des missions ?
+        missions_liees = intervention.missions.all()
+        if missions_liees.exists():
+            nb_missions = missions_liees.count()
+            missions_ids = list(missions_liees.values_list('id', flat=True))
+            
+            logging.warning(f"Tentative de suppression d'intervention {intervention_id} ({intervention_name}) "
+                          f"liée à {nb_missions} mission(s) (IDs: {missions_ids}) par utilisateur {request.user.username}")
+            
+            messages.error(request, 
+                f'Impossible de supprimer l\'intervention "{intervention_name}". '
+                f'Elle est utilisée dans {nb_missions} mission(s). '
+                f'Veuillez d\'abord supprimer ces missions ou retirer l\'intervention de celles-ci.')
+            return redirect('list_interventions_view')
+        
+        # Suppression sécurisée avec transaction atomique
+        with transaction.atomic():
+            intervention.delete()
+            
+            # Logging de sécurité pour audit
+            logging.info(f"Intervention {intervention_id} ({intervention_name}) supprimée avec succès "
+                        f"par utilisateur {request.user.username} depuis IP {request.META.get('REMOTE_ADDR', 'inconnue')}")
+            
+            messages.success(request, f'Intervention "{intervention_name}" supprimée avec succès!')
+            
+        return redirect('list_interventions_view')
+        
+    except Exception as e:
+        # Logging d'erreur pour audit de sécurité
+        logging.error(f"Erreur lors de la suppression de l'intervention {intervention_id} "
+                     f"par utilisateur {request.user.username}: {str(e)}")
+        
+        messages.error(request, 
+            'Une erreur est survenue lors de la suppression. '
+            'Veuillez réessayer ou contacter l\'administrateur.')
+        return redirect('list_interventions_view')

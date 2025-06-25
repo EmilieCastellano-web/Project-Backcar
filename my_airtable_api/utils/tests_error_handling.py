@@ -3,7 +3,7 @@ Tests pour la gestion des erreurs de template
 """
 from django.test import TestCase, RequestFactory
 from django.contrib.auth.models import AnonymousUser
-from mission.views import mission_form_view
+from mission.views.list_views import mission_form_view
 from my_airtable_api.utils.error_manage import render_with_error_handling, handle_template_errors
 from django.template.exceptions import TemplateDoesNotExist
 

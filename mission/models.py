@@ -2,7 +2,6 @@ from django.db import models
 
 # Create your models here.
 from django.db import models
-from datetime import datetime
 from django.utils import timezone
 from enum import Enum
 
@@ -76,10 +75,15 @@ class Intervention(models.Model):
     forfait = models.DecimalField(verbose_name="forfait", null=False, max_digits=10, decimal_places=2, default=0.00)
     is_forfait = models.BooleanField(verbose_name="is_forfait", default=False)
     date_creation = models.DateField(verbose_name="date de création", default=timezone.now, null=False)
+    date_modification = models.DateField(verbose_name="date de modification", null=True)
     description = models.TextField(verbose_name="description", null=True)
     categorie = models.CharField(null=False, choices=[(choix.name, choix.value) for choix in Categorie])
     
     def save(self, *args, **kwargs):
+        # Mise à jour automatique de la date de modification si l'objet existe déjà
+        if self.pk:
+            self.date_modification = timezone.now().date()
+        
         self.is_forfait = bool(self.forfait > 0)
         super().save(*args, **kwargs)
     

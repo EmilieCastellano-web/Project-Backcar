@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_js %}
+<script src="{% static 'js/intervention.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+    <h1>Liste des Interventions</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Libellé</th>
+                <th>Description</th>
+                <th>Prix Unitaire</th>
+                <th>Durée de  l'Intervention</th>
+                <th>Forfait</th>
+                <th>Is forfait</th>
+                <th> Date de Création</th>
+                <th>Date de Modification</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for intervention in interventions %}
+                <tr>
+                    <td>{{ intervention.id }}</td>
+                    <td>{{ intervention.libelle }}</td>
+                    <td>{{ intervention.description|default:" " }}</td>
+                    <td>{{ intervention.prix_unitaire }}</td>
+                    <td>{{ intervention.duree }}</td>
+                    <td>{{ intervention.forfait }}</td>
+                    <td>{{ intervention.is_forfait|yesno:"Oui, Non" }}</td>
+                    <td>{{ intervention.date_creation|date:"d/m/Y" }}</td>
+                    <td>{{ intervention.date_modification|date:"d/m/Y" }}</td>                    <td>
+                        <a href="{% url 'edit_intervention' intervention.id %}">Modifier</a>
+                        <form method="post" action="{% url 'delete_intervention' intervention.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" 
+                                    class="delete-intervention-btn"
+                                    data-intervention-id="{{ intervention.id }}"
+                                    data-libelle="{{ intervention.libelle }}"
+                                    data-duree="{{ intervention.duree_intervention }}"
+                                    data-prix="{{ intervention.prix_unitaire }}"
+                                    data-categorie="{{ intervention.get_categorie_display }}"
+                                    style="background: none; border: none; color: #007cba; text-decoration: underline; cursor: pointer;">
+                                Supprimer
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if user.is_authenticated %}
+        <a href="{% url 'create_intervention' %}">Créer une nouvelle intervention</a>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <form method="post">
+        {% csrf_token %}
+        <h2>{{ title }}</h2>
+        {{ form.as_p }}
+        <button type="submit">{{ action }}</button>
+    </form>
+
+    <!-- Affichage des dates (en lecture seule) -->
+    {% if intervention %}
+        <div class="dates-info">
+            <p><strong>Créé le :</strong> {{ intervention.date_creation|date:"d/m/Y" }}</p>
+            {% if intervention.date_modification %}
+                <p><strong>Modifié le :</strong> {{ intervention.date_modification|date:"d/m/Y" }}</p>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endblock %}
