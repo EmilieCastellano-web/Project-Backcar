@@ -9,6 +9,14 @@ class InterventionForm(forms.ModelForm):
         exclude = ['date_creation', 'date_modification']
         
     def save(self, commit=True):
+        """Enregistre l'intervention.
+
+        Args:
+            commit (bool, optional): Indique si les modifications doivent être enregistrées dans la base de données. Defaults to True.
+
+        Returns:
+            Intervention: L'objet Intervention enregistré.
+        """
         instance = super().save(commit=False)
         
         # Si c'est une modification (l'objet existe déjà), mettre à jour la date de modification

@@ -5,13 +5,16 @@ from django.db import transaction
 
 def create_client(data, erreurs):
     """Crée un client à partir des données fournies.
+
     Args:
         data (dict): Les données du client à créer
         erreurs (dict): Un dictionnaire pour stocker les erreurs de validation
-    Returns:
-        Client: L'objet client créé
+
     Raises:
         ValidationError: Si des erreurs de validation sont détectées dans les données
+
+    Returns:
+        Client: L'objet client créé
     """
     
     try:
@@ -32,15 +35,18 @@ def create_client(data, erreurs):
 
 def create_vehicule(data, client, erreurs):
     """Crée un véhicule à partir des données fournies.
+
     Args:
         data (dict): Les données du véhicule à créer
         client (Client): L'objet client auquel le véhicule est associé
         erreurs (dict): Un dictionnaire pour stocker les erreurs de validation
-    Returns:
-        Vehicule: L'objet véhicule créé
+
     Raises:
         ValidationError: Si des erreurs de validation sont détectées dans les données
-    """    
+
+    Returns:  
+        Vehicule: L'objet véhicule créé
+    """
     try:
         data.pop('id', None)  # retire 'id' si déjà présent
         vehicule = Vehicule.objects.filter(numero_serie=data.get('numero_serie')).first()
@@ -58,13 +64,18 @@ def create_vehicule(data, client, erreurs):
         raise
 
 def create_taches(mission_interventions, client, vehicule):
-    """Fonction principale de la création. Crée les tâches (mission, client, véhicule) à partir des données fournies.
+    """Crée les tâches (missions et interventions) à partir des données fournies.
+
     Args:
-        data (dict): Les données de la mission, du client et du véhicule.
-    Returns:
-        Mission: L'objet mission créé.
+        mission_interventions (list): Liste des données des missions et interventions à créer.
+        client (Client): L'objet client auquel les missions et interventions sont associées.
+        vehicule (Vehicule): L'objet véhicule auquel les missions et interventions sont associées.
+
     Raises:
         ValidationError: Si des erreurs de validation sont détectées dans les données.
+
+    Returns:
+        Mission: L'objet mission créé.
     """
     try:
         with transaction.atomic():
@@ -98,17 +109,17 @@ def create_taches(mission_interventions, client, vehicule):
 
 def create_mission(mission_data, interventions, erreurs):
     """Crée une mission à partir des données fournies.
-    
+
     Args:
         mission_data (dict): Les données de la mission à créer.
         interventions (list): Liste des interventions associées à la mission.
         erreurs (dict): Un dictionnaire pour stocker les erreurs de validation.
-        
-    Returns:
-        Mission: L'objet mission créé.
-        
+
     Raises:
         ValidationError: Si des erreurs de validation sont détectées dans les données.
+
+    Returns:
+        Mission: L'objet mission créé.
     """
     try:
         logging.info(f"Type mission_data client: {type(mission_data.get('client'))}")
@@ -125,13 +136,13 @@ def create_mission(mission_data, interventions, erreurs):
     
 def create_mission_interventions(mission_interventions, erreurs):
     """Crée les interventions liées à une mission.
+
     Args:
         mission_interventions (list): Liste des données des interventions à créer.
         erreurs (dict): Un dictionnaire pour stocker les erreurs de validation.
+
     Raises:
         ValidationError: Si des erreurs de validation sont détectées dans les données.
-    Returns:
-        None
     """
     try:
         for mi_data in mission_interventions:
@@ -167,10 +178,13 @@ def update_client(data):
 
 def update_vehicule(data):
     """Met à jour les informations d'un véhicule.
+
     Args:
         data (dict): Les données du véhicule à mettre à jour.
+
     Raises:
         ValidationError: Si le véhicule n'existe pas.
+
     Returns:
         Vehicule: L'objet véhicule mis à jour.
     """
@@ -187,13 +201,13 @@ def update_vehicule(data):
         raise ValidationError("Véhicule introuvable.")
             
 def update_taches(data):
-    """Fonction principale de l'update. Met à jour les tâches (mission, client, véhicule) à partir des données fournies.
+    """Met à jour les tâches (mission, client, véhicule) à partir des données fournies.
+
     Args:
         data (dict): Les données de la mission, du client et du véhicule.
+
     Returns:
         Mission: L'objet mission mis à jour.
-    Raises:
-        ValidationError: Si des erreurs de validation sont détectées dans les données.
     """
     try:
         with transaction.atomic():
@@ -214,10 +228,13 @@ def update_taches(data):
     
 def update_mission(data):
     """Met à jour les informations d'une mission.
+
     Args:
         data (dict): Les données de la mission à mettre à jour.
+
     Raises:
         ValidationError: Si la mission n'existe pas.
+
     Returns:
         Mission: L'objet mission mis à jour.
     """
@@ -236,13 +253,13 @@ def update_mission(data):
     
 def update_mission_interventions(interventions_data, mission):
     """Met à jour les interventions liées à une mission.
+
     Args:
         interventions_data (list): Liste des données des interventions à mettre à jour.
         mission (Mission): L'objet mission auquel les interventions sont liées.
+
     Returns:
         list: Liste des objets MissionIntervention mis à jour.
-    Raises:
-        ValidationError: Si des erreurs de validation sont détectées dans les données.
     """
     logging.info(f"update_mission_interventions - Mission ID: {mission.id}")
     logging.info(f"update_mission_interventions - Interventions reçues: {len(interventions_data)}")
@@ -273,12 +290,15 @@ def update_mission_interventions(interventions_data, mission):
         
 def intervention_get_by_id(intervention_id):
     """Récupère une intervention par son ID.
+
     Args:
         intervention_id (int): L'ID de l'intervention à récupérer.
-    Returns:
-        Intervention: L'objet Intervention correspondant à l'ID.
+
     Raises:
         ValidationError: Si l'intervention n'existe pas.
+
+    Returns:
+        Intervention: L'objet Intervention correspondant à l'ID.
     """
     try:
         intervention = Intervention.objects.get(id=intervention_id)
@@ -321,12 +341,12 @@ def get_vehicule_by_id(vehicule_id):
     
 def get_all_mission_intervention_by_id(mission_id):
     """Récupère toutes les interventions liées à une mission par son ID.
+
     Args:
         mission_id (int): L'ID de la mission pour laquelle récupérer les interventions.
+
     Returns:
         QuerySet: Un queryset contenant toutes les interventions liées à la mission.
-    Raises:
-        MissionIntervention.DoesNotExist: Si aucune intervention n'est trouvée pour la mission.
     """
     try:
         missions_interventions = MissionIntervention.objects.filter(mission_id=mission_id).select_related('mission', 'intervention')
@@ -338,7 +358,10 @@ def get_all_mission_intervention_by_id(mission_id):
     
 def get_all_interventions():
     """Récupère toutes les interventions.
-    
+
+    Raises:
+        ValidationError: Si une erreur survient lors de la récupération des interventions.
+
     Returns:
         QuerySet: Un queryset contenant toutes les interventions.
     """
@@ -352,12 +375,12 @@ def get_all_interventions():
 
 def get_mission_by_id(mission_id):
     """Récupère une mission par son ID.
+
     Args:
         mission_id (int): L'ID de la mission à récupérer.
+
     Returns:
         Mission: L'objet Mission correspondant à l'ID.
-    Raises:
-        Mission.DoesNotExist: Si la mission n'existe pas.
     """
     try:
         mission = Mission.objects.get(id=mission_id)
@@ -369,15 +392,16 @@ def get_mission_by_id(mission_id):
     
 def delete_mission(mission_id):
     """Supprime une mission et toutes ses relations associées.
-    
+
     Args:
         mission_id (int): L'ID de la mission à supprimer.
-        
+
+    Raises:
+        ValidationError: Si la mission n'existe pas.
+        ValidationError: Si une erreur survient lors de la suppression.
+
     Returns:
         dict: Un dictionnaire contenant les informations sur la suppression.
-        
-    Raises:
-        ValidationError: Si la mission n'existe pas ou si une erreur survient lors de la suppression.
     """
     try:
         with transaction.atomic():

@@ -10,9 +10,10 @@ logger = logging.getLogger(__name__)
 
 
 def handle_template_errors(error_template='error.html'):
-    """
-    Décorateur pour gérer automatiquement les erreurs de template
-    et rediriger vers une page d'erreur personnalisée
+    """Décorateur pour gérer les erreurs de template.
+
+    Args:
+        error_template (str, optional): Le nom du template d'erreur à utiliser. Defaults to 'error.html'.
     """
     def decorator(view_func):
         @wraps(view_func)
@@ -40,8 +41,16 @@ def handle_template_errors(error_template='error.html'):
 
 
 def render_with_error_handling(request, template_name, context=None, error_template='error.html'):
-    """
-    Fonction utilitaire pour rendre un template avec gestion automatique des erreurs
+    """Rend un template avec gestion des erreurs.
+
+    Args:
+        request (HttpRequest): La requête HTTP contenant les données de la requête.
+        template_name (str): Le nom du template à rendre.
+        context (dict, optional): Le contexte à passer au template. Defaults to None.
+        error_template (str, optional): Le nom du template d'erreur à utiliser. Defaults to 'error.html'.
+
+    Returns:
+        HttpResponse: La réponse HTTP contenant le rendu du template.
     """
     try:
         return render(request, template_name, context or {})

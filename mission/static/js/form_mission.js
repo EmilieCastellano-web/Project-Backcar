@@ -2,9 +2,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const isCreatePage = document.getElementById('new_mission_form');
     const isUpdatePage = document.getElementById('update_mission_form');
     const isFormPage = isCreatePage || isUpdatePage;
-    console.log('isCreatePage:', isCreatePage);
-    console.log('isUpdatePage:', isUpdatePage);
-    console.log('isFormPage:', isFormPage);
+    // console.log('isCreatePage:', isCreatePage);
+    // console.log('isUpdatePage:', isUpdatePage);
+    // console.log('isFormPage:', isFormPage);
     if (!isFormPage) {
         sessionStorage.removeItem('interventions');
         sessionStorage.removeItem('form_submitted');
@@ -34,9 +34,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // Mise à jour des champs cachés avec TOUTES les interventions
             hiddenInput.value = selectedIds.join(',');
             hiddenInputActuelles.value = selectedIdsActuelles.join(',');
-            console.log('selectedIds après suppression:', selectedIds);
-            console.log('hiddenInput.value après suppression:', hiddenInput.value);
-
             const li = button.parentElement;
             interventionsActuellesList.removeChild(li);
             console.log(`Intervention ${id} supprimée de la liste actuelle.`);
@@ -44,39 +41,31 @@ document.addEventListener('DOMContentLoaded', () => {
     });    // Restauration depuis sessionStorage si le formulaire a échoué
     if (sessionStorage.getItem('form_submitted') === 'true') {
         const saved = sessionStorage.getItem('interventions');
-        console.log('Restauration - données sauvegardées:', saved);
         if (saved) {
             saved.split(',').forEach(id => {
                 if (!selectedIds.includes(id)) {
                     selectedIds.push(id);
                     const text = select.querySelector(`option[value="${id}"]`)?.textContent;
                     if (text) addInterventionToList(id, text);
-                    console.log('selectedIds après restauration:', selectedIds);
                 }
             });
             hiddenInput.value = selectedIds.join(',');
-            console.log('hiddenInput.value après restauration:', hiddenInput.value);
         }
         sessionStorage.removeItem('form_submitted');
     }    // Sélection d'une intervention
     select.addEventListener('change', () => {
         const val = select.value;
         const text = select.options[select.selectedIndex]?.text;
-        console.log('Ajout d\'une nouvelle intervention:', val, text);
         if (val && !selectedIds.includes(val)) {
             selectedIds.push(val);
             addInterventionToList(val, text);
             hiddenInput.value = selectedIds.join(',');
             sessionStorage.setItem('interventions', hiddenInput.value);
-            console.log('selectedIds après ajout:', selectedIds);
-            console.log('hiddenInput.value après ajout:', hiddenInput.value);
         }
         select.value = '';
     });    // Sauvegarde lors de la soumission
     const form = document.querySelector('form');
     form?.addEventListener('submit', () => {
-        console.log('Soumission du formulaire - selectedIds:', selectedIds);
-        console.log('Soumission du formulaire - hiddenInput.value:', hiddenInput.value);
         sessionStorage.setItem('form_submitted', 'true');
     });
 
@@ -103,8 +92,6 @@ document.addEventListener('DOMContentLoaded', () => {
             li.remove();
             hiddenInput.value = selectedIds.join(',');
             sessionStorage.setItem('interventions', hiddenInput.value);
-            console.log('selectedIds après suppression nouvelle intervention:', selectedIds);
-            console.log('hiddenInput.value après suppression nouvelle intervention:', hiddenInput.value);
         });
 
         li.appendChild(btn);

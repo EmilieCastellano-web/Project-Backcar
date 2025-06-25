@@ -37,8 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const prioriteFilter = document.getElementById('priorite-filtrage');
         const dateDebutFilter = document.getElementById('date_debut');
         const dateFinFilter = document.getElementById('date_fin');
-        const resetButton = document.getElementById('reset-button-filter'); // Bouton "Réinitialiser"
-
+        const resetButton = document.getElementById('reset-button-filter'); 
         // Vérifier si au moins un filtre a une valeur
         let hasActiveFilters = false;
         
@@ -98,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 filterElement.addEventListener('input', checkFiltersAndToggleResetButton);
                 filterElement.addEventListener('keyup', checkFiltersAndToggleResetButton);
                 filterElement.addEventListener('paste', () => {
-                    setTimeout(checkFiltersAndToggleResetButton, 100); // Délai pour laisser le temps au paste
+                    setTimeout(checkFiltersAndToggleResetButton, 100); // Délai pour laisser le temps du copier-coller
                 });
             }
             // Événement pour les selects
@@ -107,10 +106,4 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
-    
-    // Optionnel : Ajouter des styles CSS pour une transition fluide du bouton
-    const resetButton = document.getElementById('reset-button-filter');
-    if (resetButton) {
-        resetButton.style.transition = 'opacity 0.3s ease, visibility 0.3s ease';
-    }
 });

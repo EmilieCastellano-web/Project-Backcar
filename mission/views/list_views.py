@@ -13,11 +13,13 @@ from my_airtable_api.utils.crud import get_all_mission_intervention_by_id, get_m
 
 @login_required
 def list_view(request):
-    """"Affiche la liste des missions, véhicules et clients avec filtrage.
-    Cette vue récupère les données des missions, véhicules et clients depuis la base de données
-    et les organise pour les afficher dans un template. Supporte le filtrage par client, véhicule, priorité et date.
+    """Affiche la liste des missions, véhicules et clients avec filtrage.
+
+    Args:
+        request (HttpRequest): La requête HTTP contenant les paramètres de filtrage.
+
     Returns:
-        HttpResponse: La réponse HTTP contenant le rendu du template avec les données des missions, véhicules et clients.
+        HttpResponse: La réponse HTTP contenant le rendu du template avec les données filtrées.
     """
     # Récupération des paramètres de filtrage
     filter_client = request.GET.get('client-filtrage', '')
@@ -177,8 +179,9 @@ def show_mission_view(request, mission_id):
     """Affiche les détails d'une mission spécifique.
 
     Args:
-        request: La requête HTTP
-        mission_id: L'ID de la mission à afficher
+        request (HttpRequest): La requête HTTP
+        mission_id (int): L'ID de la mission à afficher
+
     Returns:
         HttpResponse: La réponse HTTP contenant le rendu du template avec les détails de la mission
     """
@@ -207,6 +210,14 @@ def show_mission_view(request, mission_id):
     
 @login_required
 def list_interventions_view(request):
+    """Affiche la liste des interventions.
+
+    Args:
+        request (HttpRequest): La requête HTTP
+
+    Returns:
+        HttpResponse: La réponse HTTP contenant le rendu du template avec la liste des interventions
+    """
     interventions = get_all_interventions()
     return render(request, 'list_interventions.html', {
         'interventions': interventions

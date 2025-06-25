@@ -10,17 +10,18 @@ class ValidationError(Exception):
         super().__init__(message)     
 
 def extract_data_client(request, erreurs):
-    """
-    Extrait les données d'un client à partir d'une requête HTTP POST.
-    Cette fonction recueille les informations nécessaires pour créer ou mettre à jour un client,
-    en vérifiant la validité des données fournies ou en créant un nouveau client si nécessaire.
+    """Extrait les données d'un client à partir d'une requête HTTP POST.
+
     Args:
-        request: La requête HTTP contenant les données POST du formulaire
-        erreurs: Un dictionnaire pour stocker les erreurs de validation
-    Returns:
-        dict: Un dictionnaire contenant les données du client
+        request (HttpRequest): La requête HTTP contenant les données POST du formulaire
+        erreurs (dict): Un dictionnaire pour stocker les erreurs de validation
+
     Raises:
         ValidationError: Si des erreurs de validation sont détectées dans les données
+        ValidationError: Si des erreurs de validation sont détectées dans les données
+
+    Returns:
+        dict: Un dictionnaire contenant les données du client
     """
     mode = ""
     if '/new/' in request.path:
@@ -71,15 +72,17 @@ def extract_data_client(request, erreurs):
     return client
     
 def extract_data_vehicule(request, client, erreurs):
-    """
-    Extrait les données d'un véhicule à partir d'une requête HTTP POST.
-    Cette fonction recueille les informations nécessaires pour créer ou mettre à jour un véhicule,
-    en vérifiant la validité des données fournies ou en créant un nouveau véhicule si
-    nécessaire.
+    """Extrait les données d'un véhicule à partir d'une requête HTTP POST.
+
     Args:
-        request: La requête HTTP contenant les données POST du formulaire
-        client: L'objet client associé au véhicule
-        erreurs: Un dictionnaire pour stocker les erreurs de validation
+        request (HttpRequest): La requête HTTP contenant les données POST du formulaire
+        client (dict): Les données du client associé au véhicule
+        erreurs (dict): Un dictionnaire pour stocker les erreurs de validation
+
+    Raises:
+        ValidationError: Si des erreurs de validation sont détectées dans les données
+        ValidationError: Si des erreurs de validation sont détectées dans les données
+
     Returns:
         dict: Un dictionnaire contenant les données du véhicule
     """
@@ -157,17 +160,17 @@ def extract_data_vehicule(request, client, erreurs):
     return vehicule
     
 def extract_data_intervention(request, erreurs):
-    """
-    Extrait les données des interventions à partir d'une requête HTTP POST.
-    Cette fonction recueille les informations nécessaires pour créer ou mettre à jour des interventions,
-    en vérifiant la validité des données fournies ou en récupérant les interventions existantes.
+    """Extrait les données d'une intervention à partir d'une requête HTTP POST.
+
     Args:
-        request: La requête HTTP contenant les données POST du formulaire
-        erreurs: Un dictionnaire pour stocker les erreurs de validation
-    Returns:
-        list: Une liste d'objets Intervention extraits des données POST
+        request (HttpRequest): La requête HTTP contenant les données POST du formulaire
+        erreurs (dict): Un dictionnaire pour stocker les erreurs de validation
+
     Raises:
         ValidationError: Si des erreurs de validation sont détectées dans les données
+
+    Returns:
+        dict: Un dictionnaire contenant les données de l'intervention
     """
     from .crud import intervention_get_by_id
     import logging
@@ -195,20 +198,20 @@ def extract_data_intervention(request, erreurs):
     return {'interventions': interventions}
 
 def extract_data_mission(request, vehicule, client, erreurs, mission_id):
-    """
-    Extrait les données d'une mission à partir d'une requête HTTP POST.
-    Cette fonction recueille les informations nécessaires pour créer ou mettre à jour une mission,
-    en combinant les données du formulaire POST avec les informations du véhicule et du client associés.
+    """Extrait les données d'une mission à partir d'une requête HTTP POST.
+
     Args:
-        request: La requête HTTP contenant les données POST du formulaire
-        vehicule: L'objet véhicule associé à la mission
-        client: L'objet client associé à la mission
-        erreurs: Un dictionnaire pour stocker les erreurs de validation
-        mission_id: L'ID de la mission à mettre à jour (le cas échéant)
-    Returns:
-        dict: Un dictionnaire contenant les données de la mission   
+        request (HttpRequest): La requête HTTP contenant les données POST du formulaire
+        vehicule (dict): Les données du véhicule associé à la mission
+        client (dict): Les données du client associé à la mission
+        erreurs (dict): Un dictionnaire pour stocker les erreurs de validation
+        mission_id (int): L'ID de la mission à mettre à jour (le cas échéant)
+
     Raises:
         ValidationError: Si des erreurs de validation sont détectées dans les données
+
+    Returns:
+        dict: Un dictionnaire contenant les données de la mission
     """
     if isinstance(client, dict):
         client_obj = Client.objects.get(id=client['id'])
@@ -242,19 +245,19 @@ def extract_data_mission(request, vehicule, client, erreurs, mission_id):
     return mission
 
 def extract_data_mission_intervention(request, mission, interventions, erreurs):
-    """
-    Extrait les données des interventions de mission à partir d'une requête HTTP POST.
-    Cette fonction recueille les informations nécessaires pour créer ou mettre à jour les interventions
-    associées à une mission, en vérifiant la validité des données fournies.
+    """Extrait les données des interventions de mission à partir d'une requête HTTP POST.
+
     Args:
-        request: La requête HTTP contenant les données POST du formulaire
-        mission: L'objet mission auquel les interventions sont associées
-        interventions: La liste des interventions sélectionnées pour la mission
-        erreurs: Un dictionnaire pour stocker les erreurs de validation
-    Returns:
-        list: Une liste de dictionnaires contenant les données des interventions associées à la mission
+        request (HttpRequest): La requête HTTP contenant les données POST du formulaire
+        mission (dict): Les données de la mission associée
+        interventions (list): La liste des interventions sélectionnées pour la mission
+        erreurs (dict): Un dictionnaire pour stocker les erreurs de validation
+
     Raises:
         ValidationError: Si des erreurs de validation sont détectées dans les données
+
+    Returns:
+        list: Une liste de dictionnaires contenant les données des interventions de mission
     """
     mission_interventions = []
     cout_total = 0.0  

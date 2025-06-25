@@ -16,14 +16,15 @@ from django.contrib import messages
 @login_required
 def mission_form_view(request):
     """Affiche le formulaire de création d'une nouvelle mission.
-    Cette vue gère l'affichage du formulaire pour créer une nouvelle mission.
-    Si la requête est de type POST, elle traite les données du formulaire.
+
     Args:
-        request: La requête HTTP contenant les données du formulaire
-    Returns:
-        HttpResponse: La réponse HTTP contenant le rendu du template du formulaire de mission
+        request (HttpRequest): La requête HTTP contenant les données du formulaire.
+
     Raises:
-        ValidationError: Si des erreurs de validation sont détectées dans les données du formulaire
+        ValidationError: Si des erreurs de validation sont détectées dans les données du formulaire.
+
+    Returns:
+        HttpResponse: La réponse HTTP contenant le rendu du template du formulaire de mission.
     """
     if request.method == 'POST':
         erreurs = {
@@ -103,15 +104,13 @@ def mission_form_view(request):
 @login_required
 def update_mission_view(request, mission_id):
     """Affiche le formulaire de mise à jour d'une mission existante.
-    Cette vue gère l'affichage du formulaire pour mettre à jour une mission existante.
-    Si la requête est de type POST, elle traite les données du formulaire.
+
     Args:
-        request: La requête HTTP contenant les données du formulaire
-        id: L'identifiant de la mission à mettre à jour
+        request (HttpRequest): La requête HTTP contenant les données du formulaire.
+        mission_id (int): L'identifiant de la mission à mettre à jour.
+
     Returns:
-        HttpResponse: La réponse HTTP contenant le rendu du template du formulaire de mise à jour de la mission
-    Raises:
-        ValidationError: Si des erreurs de validation sont détectées dans les données du formulaire
+        HttpResponse: La réponse HTTP contenant le rendu du template du formulaire de mise à jour de la mission.
     """
     erreurs = {
         'client': {},
@@ -209,11 +208,11 @@ def update_mission_view(request, mission_id):
 @login_required
 def delete_mission_view(request, mission_id):
     """Vue pour supprimer une mission avec ses relations.
-    
+
     Args:
-        request: La requête HTTP
-        mission_id: L'ID de la mission à supprimer
-        
+        request (HttpRequest): La requête HTTP
+        mission_id (int): L'ID de la mission à supprimer
+
     Returns:
         HttpResponse: Redirection vers la liste des missions ou rendu d'erreur
     """
@@ -258,12 +257,17 @@ def delete_mission_view(request, mission_id):
             'template_error': True,
             'error_type': 'template_render_error'
         })
-    
-
 
 @login_required
 def create_intervention_view(request):
-    """Vue pour créer une nouvelle intervention"""
+    """Vue pour créer une nouvelle intervention.
+
+    Args:
+        request (HttpRequest): La requête HTTP contenant les données du formulaire.
+
+    Returns:
+        HttpResponse: La réponse HTTP contenant le rendu du template du formulaire d'intervention.
+    """
     if request.method == 'POST':
         form = InterventionForm(request.POST)
         if form.is_valid():
@@ -279,10 +283,17 @@ def create_intervention_view(request):
         'action': 'Créer'
     })
 
-
 @login_required
 def update_intervention_view(request, intervention_id):
-    """Vue pour modifier une intervention existante"""
+    """Vue pour modifier une intervention existante.
+
+    Args:
+        request (HttpRequest): La requête HTTP contenant les données du formulaire.
+        intervention_id (int): L'ID de l'intervention à modifier.
+
+    Returns:
+        HttpResponse: La réponse HTTP contenant le rendu du template du formulaire de modification de l'intervention.
+    """
     intervention = get_object_or_404(Intervention, id=intervention_id)
     
     if request.method == 'POST':
@@ -301,18 +312,16 @@ def update_intervention_view(request, intervention_id):
         'intervention': intervention
     })
 
-
 @login_required
 def delete_intervention_view(request, intervention_id):
-    """Vue pour supprimer une intervention avec vérifications sécurisées
-    
-    Sécurités implémentées:
-    - Vérification méthode POST uniquement
-    - Protection CSRF automatique via décorateur
-    - Vérification des relations avec les missions
-    - Transaction atomique
-    - Logging de sécurité
-    - Gestion d'erreurs robuste
+    """Vue pour supprimer une intervention avec vérifications sécurisées.
+
+    Args:
+        request (HttpRequest): La requête HTTP
+        intervention_id (int): L'ID de l'intervention à supprimer
+
+    Returns:
+        HttpResponse: Redirection vers la liste des interventions ou rendu d'erreur
     """
     # Sécurité : seules les requêtes POST sont autorisées
     if request.method != 'POST':
