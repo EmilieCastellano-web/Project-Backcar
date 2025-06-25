@@ -170,17 +170,28 @@ def extract_data_intervention(request, erreurs):
         ValidationError: Si des erreurs de validation sont détectées dans les données
     """
     from .crud import intervention_get_by_id
+    import logging
+
+    # Récupération de toutes les interventions (actuelles + nouvelles)
     intervention_ids = request.POST.get('interventions', '') 
+    logging.info(f"extract_data_intervention - IDs reçus: '{intervention_ids}'")
+    
     interventions = []
     
-    for i in intervention_ids.split(','):
-        try:
-            intervention = intervention_get_by_id(i)  
-            interventions.append(intervention)
-        except Intervention.DoesNotExist:
-            erreurs['intervention'] = f"L'intervention avec l'ID {i} n'existe pas"
-            raise ValidationError("Erreur(s) dans le formulaire", details=erreurs)
-
+    if intervention_ids.strip():  # Vérifier que ce n'est pas vide
+        for i in intervention_ids.split(','):
+            intervention_id = i.strip()  # Nettoyer les espaces
+            if intervention_id:  # Vérifier que l'ID n'est pas vide
+                try:
+                    intervention = intervention_get_by_id(intervention_id)  
+                    interventions.append(intervention)
+                    logging.info(f"Intervention trouvée: {intervention.id} - {intervention.libelle}")
+                except Exception as e:
+                    logging.error(f"Erreur lors de la récupération de l'intervention {intervention_id}: {e}")
+                    erreurs['intervention'][intervention_id] = f"L'intervention avec l'ID {intervention_id} n'existe pas"
+                    raise ValidationError("Erreur(s) dans le formulaire", details=erreurs)
+    
+    logging.info(f"extract_data_intervention - Total interventions extraites: {len(interventions)}")
     return {'interventions': interventions}
 
 def extract_data_mission(request, vehicule, client, erreurs, mission_id):

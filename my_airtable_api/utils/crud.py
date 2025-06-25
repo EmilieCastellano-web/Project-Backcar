@@ -244,10 +244,20 @@ def update_mission_interventions(interventions_data, mission):
     Raises:
         ValidationError: Si des erreurs de validation sont détectées dans les données.
     """
+    logging.info(f"update_mission_interventions - Mission ID: {mission.id}")
+    logging.info(f"update_mission_interventions - Interventions reçues: {len(interventions_data)}")
+    
+    # Récupérer les interventions actuelles avant suppression pour logs
+    current_interventions = MissionIntervention.objects.filter(mission=mission)
+    logging.info(f"update_mission_interventions - Interventions actuelles avant suppression: {[mi.intervention.id for mi in current_interventions]}")
+    
     MissionIntervention.objects.filter(mission=mission).delete()  # reset
+    logging.info("update_mission_interventions - Toutes les interventions actuelles supprimées")
+    
     updated = []
 
     for mi in interventions_data:
+        logging.info(f"update_mission_interventions - Création intervention: {mi['intervention'].id} - {mi['intervention'].libelle}")
         mi_obj = MissionIntervention.objects.create(
             mission=mission,
             intervention=mi['intervention'],
@@ -258,6 +268,7 @@ def update_mission_interventions(interventions_data, mission):
         updated.append(mi_obj)
 
     logging.info(f"{len(updated)} interventions liées à la mission recréées.")
+    logging.info(f"update_mission_interventions - Nouvelles interventions: {[mi.intervention.id for mi in updated]}")
     return updated
         
 def intervention_get_by_id(intervention_id):

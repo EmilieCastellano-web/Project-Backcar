@@ -18,6 +18,8 @@
 
             <label for="nom">Nom:</label>
             <input type="text" id="nom" name="nom" value="{{ mission.client.nom|default_if_none:'' }}">
+            <label for="prenom">Prénom:</label>
+            <input type="text" id="prenom" name="prenom" value="{{ mission.client.prenom|default_if_none:'' }}">
             <label for="societe">Société:</label>
             <input type="text" id="societe" name="societe" value="{{ mission.client.societe|default_if_none:'' }}">
             <label for="email">Email:</label>

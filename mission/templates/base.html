@@ -3,9 +3,122 @@
 <html lang="fr">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Gestion des Missions{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    <title>{% block title %}Gestion des Missions{% endblock %}</title>
   
+    <!-- CSS pour les messages -->
+    <style>
+        /* Styles pour les messages flash */
+        .messages-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 400px;
+        }
+        
+        .message {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 14px;
+            line-height: 1.4;
+            animation: slideIn 0.3s ease-out;
+            position: relative;
+            border-left: 4px solid;
+        }
+        
+        .message-success {
+            background-color: #d4edda;
+            color: #155724;
+            border-left-color: #28a745;
+        }
+        
+        .message-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left-color: #dc3545;
+        }
+        
+        .message-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border-left-color: #ffc107;
+        }
+        
+        .message-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border-left-color: #17a2b8;
+        }
+        
+        .message-icon {
+            font-size: 16px;
+            margin-right: 8px;
+            font-weight: bold;
+        }
+        
+        .message-close {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: none;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            color: inherit;
+            opacity: 0.7;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .message-close:hover {
+            opacity: 1;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+        
+        .message.fade-out {
+            animation: slideOut 0.3s ease-out forwards;
+        }
+        
+        /* Responsive */
+        @media (max-width: 480px) {
+            .messages-container {
+                top: 10px;
+                right: 10px;
+                left: 10px;
+                max-width: none;
+            }
+        }
+    </style>
     
     {% block extra_css %}{% endblock %}
 </head>
@@ -18,11 +131,6 @@
             
             <div>
                 <ul>
-                    {% comment %} <li>
-                        <a href="{% url 'mission_list_view' %}">
-                            Liste des Missions
-                        </a>
-                    </li> {% endcomment %}
                     <li>
                         <a href="{% url 'mission_form_view' %}">
                             Nouvelle Mission
@@ -60,22 +168,26 @@
         </div>
     </nav>    <!-- Messages Flash -->
     {% if messages %}
-        <div>
+        <div class="messages-container">
             {% for message in messages %}
-                <div>
-                    {% if message.tags == 'error' %}
-                        Erreur: 
-                    {% elif message.tags == 'success' %}
-                        Succès: 
-                    {% elif message.tags == 'warning' %}
-                        Attention: 
-                    {% else %}
-                        Info: 
-                    {% endif %}
-                    {{ message }}
+                <div class="message message-{{ message.tags }}" id="message-{{ forloop.counter }}">                    <span class="message-icon">
+                        {% if message.tags == 'error' %}
+                            ✗
+                        {% elif message.tags == 'success' %}
+                            ✓
+                        {% elif message.tags == 'warning' %}
+                            !
+                        {% else %}
+                            i
+                        {% endif %}
+                    </span>
+                    <span class="message-text">{{ message }}</span>                    <button class="message-close" onclick="closeMessage('message-{{ forloop.counter }}')" title="Fermer">
+                        ×
+                    </button>
                 </div>
             {% endfor %}
-        </div>    {% endif %}
+        </div>
+    {% endif %}
 
     <!-- Contenu Principal -->
     <div>
@@ -97,22 +209,78 @@
             <small>&copy; {% now "Y" %} Gestion des Missions - Tous droits réservés</small>
         </div>
     </footer>
+      {% block extra_js %}{% endblock %}
     
-    {% block extra_js %}{% endblock %}
-      <!-- Custom JavaScript -->
+    <!-- JavaScript pour la gestion des messages -->
     <script>
-        // Auto-hide alerts after 5 seconds
-        setTimeout(function() {
-            var alerts = document.querySelectorAll('div');
-            alerts.forEach(function(alert) {
-                if (alert.textContent.includes('Erreur:') || 
-                    alert.textContent.includes('Succès:') || 
-                    alert.textContent.includes('Attention:') || 
-                    alert.textContent.includes('Info:')) {
-                    alert.style.display = 'none';
-                }
+        // Fonction pour fermer un message spécifique
+        function closeMessage(messageId) {
+            const messageElement = document.getElementById(messageId);
+            if (messageElement) {
+                messageElement.classList.add('fade-out');
+                setTimeout(() => {
+                    messageElement.remove();
+                }, 300);
+            }
+        }
+        
+        // Auto-hide des messages après 5 secondes
+        document.addEventListener('DOMContentLoaded', function() {
+            const messages = document.querySelectorAll('.message');
+            
+            messages.forEach(function(message, index) {
+                // Auto-hide après 5 secondes (sauf pour les erreurs qui restent 8 secondes)
+                const isError = message.classList.contains('message-error');
+                const delay = isError ? 8000 : 5000;
+                
+                setTimeout(function() {
+                    if (message.parentNode) { // Vérifier que le message existe encore
+                        message.classList.add('fade-out');
+                        setTimeout(() => {
+                            if (message.parentNode) {
+                                message.remove();
+                            }
+                        }, 300);
+                    }
+                }, delay);
             });
-        }, 5000);
+        });
+        
+        // Fonction utilitaire pour afficher un message via JavaScript (optionnel)
+        function showMessage(text, type = 'info') {
+            const messagesContainer = document.querySelector('.messages-container') || 
+                                    createMessagesContainer();
+            
+            const messageId = 'js-message-' + Date.now();            const icons = {
+                'success': '✓',
+                'error': '✗', 
+                'warning': '!',
+                'info': 'i'
+            };
+            
+            const messageHTML = `
+                <div class="message message-${type}" id="${messageId}">
+                    <span class="message-icon">${icons[type] || icons.info}</span>
+                    <span class="message-text">${text}</span>
+                    <button class="message-close" onclick="closeMessage('${messageId}')" title="Fermer">×</button>
+                </div>
+            `;
+            
+            messagesContainer.insertAdjacentHTML('beforeend', messageHTML);
+            
+            // Auto-hide
+            const delay = type === 'error' ? 8000 : 5000;
+            setTimeout(() => {
+                closeMessage(messageId);
+            }, delay);
+        }
+        
+        function createMessagesContainer() {
+            const container = document.createElement('div');
+            container.className = 'messages-container';
+            document.body.appendChild(container);
+            return container;
+        }
     </script>
 </body>
 </html>

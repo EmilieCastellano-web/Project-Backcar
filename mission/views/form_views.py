@@ -1,5 +1,5 @@
 from my_airtable_api.utils.extract_data import ValidationError, extract_data_client, extract_data_vehicule, extract_data_intervention, extract_data_mission, extract_data_mission_intervention
-from my_airtable_api.utils.crud import create_taches, get_all_mission_intervention_by_id, create_client, create_vehicule, get_client_by_id, get_vehicule_by_id, get_mission_by_id, update_taches, get_all_interventions
+from my_airtable_api.utils.crud import create_taches, get_all_mission_intervention_by_id, create_client, create_vehicule, get_client_by_id, get_vehicule_by_id, get_mission_by_id, update_taches
 from my_airtable_api.utils.error_manage import handle_template_errors, render_with_error_handling
 from mission.models import Client, Vehicule, Intervention, Priorite, Taux
 from mission.form import InterventionForm
@@ -62,15 +62,14 @@ def mission_form_view(request):
                 # Récuperation des données 
                 #  INFO:Client data extracted: Lilo Lila
                 # INFO:Vehicule data extracted: Audi A5
-                # INFO:Interventions data extracted: {'interventions': [<Intervention: Intervention object (2)>, <Intervention: Intervention object (3)>]}
+                # INFO:Interventions data extracted: {'interventions': [<Intervention: Intervention ob ject (2)>, <Intervention: Intervention object (3)>]}
                 # INFO:Mission data extracted: {'id': None, 'remarque': '', 'priorite': 'BASSE', 'vehicule': <Vehicule: Audi A5>, 'client': <Client: Lilo Lila>}
                 # INFO:Mission Intervention data extracted: [{'mission': {'id': None, 'remarque': '', 'priorite': 'BASSE', 'vehicule': <Vehicule: Audi A5>, 'client': <Client: Lilo Lila>}, 
                 # 'intervention': <Intervention: Intervention object (2)>, 'duree_supplementaire': 0.0, 'taux': 'T2', 'cout_total': 250.0},
                 # {'mission': {'id': None, 'remarque': '', 'priorite': 'BASSE', 'vehicule': <Vehicule: Audi A5>, 'client': <Client: Lilo Lila>}, 
-                # 'intervention': <Intervention: Intervention object (3)>, 'duree_supplementaire': 0.0, 'taux': 'T2', 'cout_total': 800.0}]
-                mission = create_taches(mission_interventions, client, vehicule)
-
-                logging.info(f"Mission created: {mission}")
+                # 'intervention': <Intervention: Intervention object (3)>, 'duree_supplementaire': 0.0, 'taux': 'T2', 'cout_total': 800.0}]                mission = create_taches(mission_interventions, client, vehicule)
+                create_taches(mission_interventions, client, vehicule)
+                messages.success(request, f'Mission créée avec succès pour le client {client.prenom} {client.nom}!')
                 return redirect('list_view')
         
         except ValidationError as ve:
@@ -82,7 +81,8 @@ def mission_form_view(request):
                 'vehicules': Vehicule.objects.all(),
                 'interventions': Intervention.objects.all(),
                 'priorites': [(choix.name, choix.value) for choix in Priorite],
-                'taux': [(choix.name, choix.value) for choix in Taux]                })
+                'taux': [(choix.name, choix.value) for choix in Taux] 
+                })
         
         except Exception as e:
             logging.error(f"Error creating mission: {e}")
@@ -138,11 +138,14 @@ def update_mission_view(request, mission_id):
             'prix_unitaire': mi.intervention.prix_unitaire,
             'taux': mi.taux,
             'priorite': mi.mission.priorite,
-            'cout_total': mi.cout_total
-        } for mi in mission_intervention_list
+            'cout_total': mi.cout_total        } for mi in mission_intervention_list
     ]
+    
     if request.method == 'POST':
             try:
+                # Log des données POST reçues
+                logging.info(f"update_mission_view - POST data: {dict(request.POST)}")
+                
                 # 1. Extraction des données
                 client = extract_data_client(request, erreurs)
                 vehicule = extract_data_vehicule(request, client, erreurs)
@@ -156,11 +159,10 @@ def update_mission_view(request, mission_id):
                     'vehicule': vehicule,
                     'mission': mission_data,
                     'mission_interventions': mission_interventions
-                }
-
-                # 3. Mise à jour dans la BDD
+                }                # 3. Mise à jour dans la BDD
                 update_taches(data)
 
+                messages.success(request, f'Mission mise à jour avec succès!')
                 return redirect('list_view')
             
             except ValidationError as ve:

@@ -1,4 +1,17 @@
-// Fonction de confirmation de suppression d'intervention
+/**
+ * Fonction de confirmation de suppression d'intervention
+ *  Cette fonction affiche un message de confirmation détaillé avant de supprimer une intervention.
+ *  Elle demande à l'utilisateur de taper "SUPPRIMER" pour confirmer la suppression.
+ *   Si l'utilisateur confirme, une seconde confirmation est demandée avant de procéder à la suppression.
+ *   Si l'utilisateur annule ou ne tape pas "SUPPRIMER", la suppression est
+ *  annulée.
+ * @param {*} interventionId 
+ * @param {*} libelle 
+ * @param {*} dureeIntervention 
+ * @param {*} prixUnitaire 
+ * @param {*} categorie 
+ * @returns 
+ */
 function confirmDeleteIntervention(interventionId, libelle, dureeIntervention, prixUnitaire, categorie) {
     const confirmationMessage = `CONFIRMATION DE SUPPRESSION D'INTERVENTION
 
@@ -28,7 +41,6 @@ Tapez "SUPPRIMER" dans le champ ci-dessous pour confirmer :`;
         return false;
     }
     
-    // Double confirmation
     const secondConfirmation = confirm(`DERNIÈRE CONFIRMATION
 
 Vous avez tapé "SUPPRIMER" correctement.
@@ -41,26 +53,16 @@ Cette action ne peut pas être annulée !`);
         return false;
     }
     
-    // Afficher un message de chargement après validation
-    setTimeout(() => {
-        const deleteButton = document.querySelector('[type="submit"][style*="background-color: #ff4444"], .btn-danger, .delete-btn');
-        if (deleteButton) {
-            deleteButton.innerHTML = "Suppression en cours...";
-            deleteButton.disabled = true;
-        }
-    }, 100);
-    
     return true;
 }
 
-// Fonction pour confirmer la suppression avec un formulaire simple (alternative)
+// Fonction pour confirmer la suppression avec un formulaire simple
 function confirmDeleteInterventionForm(interventionId, libelle) {
     return confirm(`Êtes-vous sûr de vouloir supprimer l'intervention "${libelle}" ?`);
 }
 
 // Initialisation des événements de suppression
 document.addEventListener('DOMContentLoaded', function() {
-    // Gestionnaire pour les boutons de suppression avec confirmation complète
     const deleteButtons = document.querySelectorAll('.delete-intervention-btn');
     deleteButtons.forEach(button => {
         button.addEventListener('click', function(e) {
@@ -73,7 +75,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const categorie = this.dataset.categorie;
             
             if (confirmDeleteIntervention(interventionId, libelle, duree, prix, categorie)) {
-                // Soumettre le formulaire de suppression (méthode POST sécurisée)
                 const form = this.closest('form');
                 if (form) {
                     // Désactiver le bouton pendant la soumission pour éviter les clics multiples
@@ -81,7 +82,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     this.innerHTML = 'Suppression en cours...';
                     form.submit();
                 } else {
-                    // Fallback pour les anciens liens (ne devrait plus arriver)
                     console.warn('Formulaire non trouvé, utilisation du fallback URL - non sécurisé');
                     window.location.href = this.href;
                 }

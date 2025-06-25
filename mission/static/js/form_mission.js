@@ -2,7 +2,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const isCreatePage = document.getElementById('new_mission_form');
     const isUpdatePage = document.getElementById('update_mission_form');
     const isFormPage = isCreatePage || isUpdatePage;
-
+    console.log('isCreatePage:', isCreatePage);
+    console.log('isUpdatePage:', isUpdatePage);
+    console.log('isFormPage:', isFormPage);
     if (!isFormPage) {
         sessionStorage.removeItem('interventions');
         sessionStorage.removeItem('form_submitted');
@@ -15,61 +17,66 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const hiddenInputActuelles = document.getElementById('interventions-actuelles-hidden');
     const interventionsActuellesList = document.getElementById('interventions-actuelles-list');
-    let selectedIds = [];
-
-    // Récupère les interventions déjà en base (update)
+    let selectedIds = [];    // Récupère les interventions déjà en base (update)
     let selectedIdsActuelles = hiddenInputActuelles
         ? hiddenInputActuelles.value.split(',').filter(id => id)
         : [];
     selectedIds.push(...selectedIdsActuelles);
-
-    // Suppression des interventions actuelles (update)
+    console.log('Page chargée - Interventions actuelles:', selectedIdsActuelles);
+    console.log('Page chargée - Toutes les interventions sélectionnées:', selectedIds);    // Suppression des interventions actuelles (update)
     document.querySelectorAll('.remove-intervention').forEach(button => {
         button.addEventListener('click', () => {
             const id = button.getAttribute('data-id');
+            console.log('Suppression de l\'intervention actuelle:', id);
             selectedIds = selectedIds.filter(i => i !== id);
             selectedIdsActuelles = selectedIdsActuelles.filter(i => i !== id);
 
-            hiddenInput.value = selectedIds.filter(i => !selectedIdsActuelles.includes(i)).join(',');
+            // Mise à jour des champs cachés avec TOUTES les interventions
+            hiddenInput.value = selectedIds.join(',');
             hiddenInputActuelles.value = selectedIdsActuelles.join(',');
+            console.log('selectedIds après suppression:', selectedIds);
+            console.log('hiddenInput.value après suppression:', hiddenInput.value);
 
             const li = button.parentElement;
             interventionsActuellesList.removeChild(li);
+            console.log(`Intervention ${id} supprimée de la liste actuelle.`);
         });
-    });
-
-    // Restauration depuis sessionStorage si le formulaire a échoué
+    });    // Restauration depuis sessionStorage si le formulaire a échoué
     if (sessionStorage.getItem('form_submitted') === 'true') {
         const saved = sessionStorage.getItem('interventions');
+        console.log('Restauration - données sauvegardées:', saved);
         if (saved) {
             saved.split(',').forEach(id => {
                 if (!selectedIds.includes(id)) {
                     selectedIds.push(id);
                     const text = select.querySelector(`option[value="${id}"]`)?.textContent;
                     if (text) addInterventionToList(id, text);
+                    console.log('selectedIds après restauration:', selectedIds);
                 }
             });
-            hiddenInput.value = selectedIds.filter(i => !selectedIdsActuelles.includes(i)).join(',');
+            hiddenInput.value = selectedIds.join(',');
+            console.log('hiddenInput.value après restauration:', hiddenInput.value);
         }
         sessionStorage.removeItem('form_submitted');
-    }
-
-    // Sélection d'une intervention
+    }    // Sélection d'une intervention
     select.addEventListener('change', () => {
         const val = select.value;
         const text = select.options[select.selectedIndex]?.text;
+        console.log('Ajout d\'une nouvelle intervention:', val, text);
         if (val && !selectedIds.includes(val)) {
             selectedIds.push(val);
             addInterventionToList(val, text);
-            hiddenInput.value = selectedIds.filter(i => !selectedIdsActuelles.includes(i)).join(',');
+            hiddenInput.value = selectedIds.join(',');
             sessionStorage.setItem('interventions', hiddenInput.value);
+            console.log('selectedIds après ajout:', selectedIds);
+            console.log('hiddenInput.value après ajout:', hiddenInput.value);
         }
         select.value = '';
-    });
-
-    // Sauvegarde lors de la soumission
+    });    // Sauvegarde lors de la soumission
     const form = document.querySelector('form');
     form?.addEventListener('submit', () => {
+        console.log('Soumission du formulaire - selectedIds:', selectedIds);
+        console.log('Soumission du formulaire - hiddenInput.value:', hiddenInput.value);
         sessionStorage.setItem('form_submitted', 'true');
     });
 
@@ -90,13 +97,14 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.style.color = 'white';
         btn.style.border = 'none';
         btn.style.borderRadius = '3px';
-        btn.style.cursor = 'pointer';
-
-        btn.addEventListener('click', () => {
+        btn.style.cursor = 'pointer';        btn.addEventListener('click', () => {
+            console.log('Suppression d\'une nouvelle intervention:', id);
             selectedIds = selectedIds.filter(i => i !== id);
             li.remove();
-            hiddenInput.value = selectedIds.filter(i => !selectedIdsActuelles.includes(i)).join(',');
+            hiddenInput.value = selectedIds.join(',');
             sessionStorage.setItem('interventions', hiddenInput.value);
+            console.log('selectedIds après suppression nouvelle intervention:', selectedIds);
+            console.log('hiddenInput.value après suppression nouvelle intervention:', hiddenInput.value);
         });
 
         li.appendChild(btn);
