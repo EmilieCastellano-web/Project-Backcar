@@ -4,10 +4,9 @@
 {% block title %}Créer une Mission{% endblock %}
 
 {% block content %}
-    <form method="post" action="{% url 'mission_form_view' %}" id="new_mission_form">
+    <form method="post" action="{% url 'post_mission_form_view' %}" id="new_mission_form">
             {% csrf_token %}
             <h2>Créer un nouveau client</h2>
-
             {% if erreurs.client %}
                 {% for champ, message in erreurs.client.items %}
                     <p style="color:red;">{{ message }}</p>

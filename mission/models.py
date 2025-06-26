@@ -1,11 +1,11 @@
 from django.db import models
-
-# Create your models here.
-from django.db import models
+from django.core import validators
+from django.db.models import FloatField
+from django.utils.functional import cached_property
+from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
 from enum import Enum
 
-# Create your models here.
 class Priorite(Enum):
     NON_PRIORITAIRE = "Non prioritaire"
     BASSE = "Basse"
@@ -24,6 +24,22 @@ class Taux(Enum):
     T1 = "T1"
     T2 = "T2"
     T3 = "T3"
+    
+class PositiveFloatField(FloatField):
+    description = _("Positive Float")
+
+    @cached_property
+    def validators(self):
+        validators_ = super().validators
+
+        validators_.append(validators.MinValueValidator(0.0))
+        return validators_
+
+    def formfield(self, **kwargs):
+        return super().formfield(**{
+            'min_value': 0.0,
+            **kwargs,
+        })
 
 class Client(models.Model):
     class Meta:
@@ -58,11 +74,11 @@ class Vehicule(models.Model):
     immatriculation = models.CharField(verbose_name="immatriculation", null=False, max_length=9)
     numero_serie = models.CharField(verbose_name="numéro de série", null=False, unique=True, max_length=17)
     mise_circulation = models.DateField(verbose_name="date de mise en circulation", null=True)
-    kilometrage = models.IntegerField(verbose_name="kilométrage", null=False)
+    kilometrage = models.PositiveIntegerField(verbose_name="kilométrage", null=False, default=0)
     remarque = models.TextField(verbose_name="Remarque", null=True)
     client = models.ForeignKey(verbose_name="client", to=Client, null=False, on_delete=models.CASCADE)
     vo = models.BooleanField(verbose_name="vo", null=False)
-    boite_vitesse = models.CharField(verbose_name="boite de visse", null=False)
+    boite_vitesse = models.CharField(verbose_name="boite de vitesse", null=False)
     carburant = models.CharField(verbose_name="carburant", null=False)
     
     def __str__(self):
@@ -70,9 +86,9 @@ class Vehicule(models.Model):
     
 class Intervention(models.Model):
     libelle = models.CharField(verbose_name="libellé", null=False, max_length=100)
-    duree_intervention = models.DecimalField(verbose_name="durée", null=False, max_digits=5, decimal_places=2)
-    prix_unitaire = models.DecimalField(verbose_name="prix unitaire", null=False, max_digits=10, decimal_places=2)
-    forfait = models.DecimalField(verbose_name="forfait", null=False, max_digits=10, decimal_places=2, default=0.00)
+    duree_intervention = PositiveFloatField(verbose_name="durée", null=False, default=0.00)
+    prix_unitaire = PositiveFloatField(verbose_name="prix unitaire", null=False, default=0.00)
+    forfait = PositiveFloatField(verbose_name="forfait", null=False, default=0.00)
     is_forfait = models.BooleanField(verbose_name="is_forfait", default=False)
     date_creation = models.DateField(verbose_name="date de création", default=timezone.now, null=False)
     date_modification = models.DateField(verbose_name="date de modification", null=True)
@@ -108,9 +124,9 @@ class MissionIntervention(models.Model):
         
     mission = models.ForeignKey(verbose_name="mission", to=Mission, on_delete=models.CASCADE, null=False)
     intervention = models.ForeignKey(verbose_name="intervention", to=Intervention, on_delete=models.CASCADE, null=False)
-    duree_supplementaire = models.DecimalField(verbose_name="durée supplémentaire", null=True, max_digits=5, decimal_places=2, default=0.00)
+    duree_supplementaire = PositiveFloatField(verbose_name="durée supplémentaire", null=True, default=0.00)
     taux = models.CharField(verbose_name="taux horaire", null=False, choices=[(choix.name, choix.value) for choix in Taux])
-    cout_total = models.DecimalField(verbose_name="total", null=False, max_digits=10, decimal_places=2, default=0.00)
+    cout_total = PositiveFloatField(verbose_name="total", null=False, default=0.00)
     
     
     

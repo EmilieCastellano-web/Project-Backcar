@@ -4,7 +4,7 @@
 {% block title %}Modifier Mission{% endblock %}
 
 {% block content %}
-    <form method="post" action="{% url 'edit_mission' mission.id %}" id="update_mission_form">
+    <form method="post" action="{% url 'post_update_mission' mission.id %}" id="update_mission_form">
             {% csrf_token %}
             <input type="hidden" name="client_id" value="{{ mission.client.id|default_if_none:'' }}">
             <input type="hidden" name="vehicule_id" value="{{ mission.vehicule.id|default_if_none:'' }}">

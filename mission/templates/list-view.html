@@ -77,7 +77,7 @@
                     <td>{{ mission.priorite }}</td>
                     <td>{{ mission.date_demande|date:"d/m/Y" }}</td>
                     <td>{{mission.taux}}</td>
-                    <td>{{ mission.cout_total}}</td>
+                    <td>{{ mission.cout_total|floatformat:2}}</td>
                     <td>{{ mission.remarque|default:" " }}</td>
                     <td>
                         {% for intervention in mission.interventions %}
@@ -184,10 +184,11 @@
         </table>
     </div>
     <br><br>
-    <a href="{% url 'mission_form_view' %}">Créer une mission</a>
+    <a href="{% url 'get_mission_form_view' %}">Créer une mission</a>
 {% endblock %}
 
 {% block extra_js %}
     <script src="{% static 'js/list-view.js' %}"></script>
+    <script src="{% static 'js/form_mission.js' %}"></script>
 {% endblock %}
 </html>

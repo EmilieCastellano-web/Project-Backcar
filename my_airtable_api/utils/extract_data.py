@@ -1,6 +1,7 @@
 from datetime import datetime
 import logging
 from mission.models import Intervention, Taux, Vehicule, Client
+from django.core.validators import MinValueValidator
 
 class ValidationError(Exception):
     def __init__(self, message, field=None, details=None):
@@ -86,6 +87,7 @@ def extract_data_vehicule(request, client, erreurs):
     Returns:
         dict: Un dictionnaire contenant les données du véhicule
     """
+    compare_km = MinValueValidator(0)
     
     mode = ""
     if '/new/' in request.path:
@@ -117,7 +119,7 @@ def extract_data_vehicule(request, client, erreurs):
             'immatriculation': request.POST.get('immatriculation'),
             'numero_serie': request.POST.get('numero_serie'),
             'mise_circulation': mise_circulation if mise_circulation else None,
-            'kilometrage': request.POST.get('kilometrage', ""),
+            'kilometrage': request.POST.get('kilometrage', 0),
             'remarque': request.POST.get('remarque_vehicule', ""),
             'vo': request.POST.get('vo') == 'on',
             'boite_vitesse': request.POST.get('boite_vitesse'),
@@ -134,19 +136,18 @@ def extract_data_vehicule(request, client, erreurs):
             erreurs['vehicule']['immatriculation'] = "L'immatriculation doit comporter 9 caractères alphanumériques"
         if not vehicule['numero_serie'] or len(vehicule['numero_serie']) != 17:
             erreurs['vehicule']['numero_serie'] = "Le numéro de série doit comporter 17 caractères"
-        try:
-            km = int(vehicule['kilometrage'])
-            if km < 0:
-                erreurs['vehicule']['kilometrage'] = "Le kilométrage doit être un nombre positif"
-        except ValueError:
-            erreurs['vehicule']['kilometrage'] = "Kilométrage invalide"
-
+        km = int(vehicule['kilometrage'])
+        if km < 0:
+            erreurs['vehicule']['kilometrage'] = "Le kilométrage doit être un nombre entier positif"
+        
         if not vehicule['boite_vitesse']:
             erreurs['vehicule']['boite_vitesse'] = "La boîte de vitesse est requise"
         if not vehicule['carburant']:
             erreurs['vehicule']['carburant'] = "Le type de carburant est requis"
         if erreurs['vehicule']:
             raise ValidationError("Erreur(s) dans le formulaire", details=erreurs)
+        
+        vehicule['kilometrage'] = km
         
     if mode == "update":
         

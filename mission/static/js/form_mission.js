@@ -2,10 +2,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const isCreatePage = document.getElementById('new_mission_form');
     const isUpdatePage = document.getElementById('update_mission_form');
     const isFormPage = isCreatePage || isUpdatePage;
-    // console.log('isCreatePage:', isCreatePage);
-    // console.log('isUpdatePage:', isUpdatePage);
-    // console.log('isFormPage:', isFormPage);
+    console.log('isCreatePage:', isCreatePage);
+    console.log('isUpdatePage:', isUpdatePage);
+    console.log('isFormPage:', isFormPage);
     if (!isFormPage) {
+        console.log('Aucune page de formulaire détectée, nettoyage du sessionStorage.');
         sessionStorage.removeItem('interventions');
         sessionStorage.removeItem('form_submitted');
         return;
@@ -41,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });    // Restauration depuis sessionStorage si le formulaire a échoué
     if (sessionStorage.getItem('form_submitted') === 'true') {
         const saved = sessionStorage.getItem('interventions');
+        console.log('Restauration des interventions depuis sessionStorage:', saved);
         if (saved) {
             saved.split(',').forEach(id => {
                 if (!selectedIds.includes(id)) {
@@ -56,19 +58,28 @@ document.addEventListener('DOMContentLoaded', () => {
     select.addEventListener('change', () => {
         const val = select.value;
         const text = select.options[select.selectedIndex]?.text;
+        console.log('Intervention sélectionnée:', val, text);
         if (val && !selectedIds.includes(val)) {
             selectedIds.push(val);
+            console.log('Ajout d\'une nouvelle intervention:', val, text);
             addInterventionToList(val, text);
             hiddenInput.value = selectedIds.join(',');
             sessionStorage.setItem('interventions', hiddenInput.value);
         }
         select.value = '';
-    });    // Sauvegarde lors de la soumission
-    const form = document.querySelector('form');
-    form?.addEventListener('submit', () => {
-        sessionStorage.setItem('form_submitted', 'true');
     });
-
+    // Sauvegarde lors de la soumission
+    if (isCreatePage || isUpdatePage) {
+        const form = isCreatePage || isUpdatePage;
+        form.addEventListener('submit', () => {
+            console.log('Formulaire soumis, sauvegarde des interventions.');
+            hiddenInput.value = selectedIds.join(',');
+            sessionStorage.setItem('interventions', hiddenInput.value);
+            sessionStorage.setItem('form_submitted', 'true');
+            console.log('Interventions sauvegardées dans sessionStorage:', hiddenInput.value);
+        });
+    };
+    
     // Fonction utilitaire d’ajout d’un <li>
     function addInterventionToList(id, text) {
         const li = document.createElement('li');

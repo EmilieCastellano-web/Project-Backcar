@@ -14,95 +14,103 @@ from django.contrib import messages
 
 @handle_template_errors()
 @login_required
-def mission_form_view(request):
-    """Affiche le formulaire de création d'une nouvelle mission.
+def get_mission_form_view(request):
+    """Fonction pour afficher le formulaire de création d'une nouvelle mission.
+
+    Args:
+        request (): HttpRequest: La requête HTTP contenant les données du formulaire.
+
+    Returns:
+        HttpResponse: La réponse HTTP contenant le rendu du template du formulaire de création de mission.
+    """
+    
+    return render_with_error_handling(request, 'new_mission.html', {
+        'clients': Client.objects.all(),
+        'vehicules': Vehicule.objects.all(),
+        'interventions': Intervention.objects.all(),
+        'priorites': [(choix.name, choix.value) for choix in Priorite],
+        'taux': [(choix.name, choix.value) for choix in Taux]
+    })
+
+def post_mission_form_view(request):
+    """Fonction pour traiter les données du formulaire de création d'une nouvelle mission.
 
     Args:
         request (HttpRequest): La requête HTTP contenant les données du formulaire.
 
-    Raises:
-        ValidationError: Si des erreurs de validation sont détectées dans les données du formulaire.
-
     Returns:
-        HttpResponse: La réponse HTTP contenant le rendu du template du formulaire de mission.
+        HttpResponse: La réponse HTTP redirigeant vers la liste des missions ou affichant une erreur.
     """
-    if request.method == 'POST':
-        erreurs = {
-            'client': {},
-            'vehicule': {},
-            'mission': {}, 
-            'intervention': {}
-        }
-        try:
-            with transaction.atomic():
-                # 1. Extraction des données
-                client_data = extract_data_client(request, erreurs)
-                if client_data.get('id'): 
-                    client = get_client_by_id(client_data['id'])  # objet existant
-                else:
-                    client = create_client(client_data, erreurs)  # sinon on le crée
+    erreurs = {
+        'client': {},
+        'vehicule': {},
+        'mission': {}, 
+        'intervention': {}
+    }
+    try:
+        with transaction.atomic():
+            # 1. Extraction des données
+            client_data = extract_data_client(request, erreurs)
+            logging.info(f"Client data extracted: {client_data}")
+            if client_data.get('id'): 
+                client = get_client_by_id(client_data['id'])  # objet existant
+            else:
+                client = create_client(client_data, erreurs)  # sinon on le crée
 
-                logging.info(f"Client data extracted: {client}")
-                
-                vehicule_data = extract_data_vehicule(request, client, erreurs)
-                if vehicule_data.get('id'):
-                    vehicule = get_vehicule_by_id(vehicule_data['id'])
-                    if vehicule.client.id != client.id:
-                        erreurs['vehicule']['client'] = "Le véhicule appartient à un autre client"
-                        raise ValidationError("Erreur(s) dans le formulaire", details=erreurs)
-                else:
-                    vehicule = create_vehicule(vehicule_data, client, erreurs)
-                logging.info(f"Vehicule data extracted: {vehicule}")
-                
-                interventions = extract_data_intervention(request, erreurs)
-                logging.info(f"Interventions data extracted: {interventions}")
-                mission_data = extract_data_mission(request, vehicule, client, erreurs, mission_id=None)
-                logging.info(f"Mission data extracted: {mission_data}")
-                mission_interventions = extract_data_mission_intervention(request, mission_data, interventions, erreurs)
-                logging.info(f"Mission Intervention data extracted: {mission_interventions}")
-                # Récuperation des données 
-                #  INFO:Client data extracted: Lilo Lila
-                # INFO:Vehicule data extracted: Audi A5
-                # INFO:Interventions data extracted: {'interventions': [<Intervention: Intervention ob ject (2)>, <Intervention: Intervention object (3)>]}
-                # INFO:Mission data extracted: {'id': None, 'remarque': '', 'priorite': 'BASSE', 'vehicule': <Vehicule: Audi A5>, 'client': <Client: Lilo Lila>}
-                # INFO:Mission Intervention data extracted: [{'mission': {'id': None, 'remarque': '', 'priorite': 'BASSE', 'vehicule': <Vehicule: Audi A5>, 'client': <Client: Lilo Lila>}, 
-                # 'intervention': <Intervention: Intervention object (2)>, 'duree_supplementaire': 0.0, 'taux': 'T2', 'cout_total': 250.0},
-                # {'mission': {'id': None, 'remarque': '', 'priorite': 'BASSE', 'vehicule': <Vehicule: Audi A5>, 'client': <Client: Lilo Lila>}, 
-                # 'intervention': <Intervention: Intervention object (3)>, 'duree_supplementaire': 0.0, 'taux': 'T2', 'cout_total': 800.0}]                mission = create_taches(mission_interventions, client, vehicule)
-                create_taches(mission_interventions, client, vehicule)
-                messages.success(request, f'Mission créée avec succès pour le client {client.prenom} {client.nom}!')
-                return redirect('list_view')
-        
-        except ValidationError as ve:
-            logging.error(f"Validation error: {ve.message}")
-            return render_with_error_handling(request, 'new_mission.html', {
-                'erreurs': erreurs,
-                'valeurs': request.POST.dict(),
-                'clients': Client.objects.all(),
-                'vehicules': Vehicule.objects.all(),
-                'interventions': Intervention.objects.all(),
-                'priorites': [(choix.name, choix.value) for choix in Priorite],
-                'taux': [(choix.name, choix.value) for choix in Taux] 
-                })
-        
-        except Exception as e:
-            logging.error(f"Error creating mission: {e}")
-            # Variable pour gérer l'affichage du template d'erreur
-            return render(request, 'error.html', {
-                'error': str(e),
-                'template_error': True,
-                'error_type': 'template_render_error'
-            })
-    else:
+            logging.info(f"Client data extracted: {client}")
+            
+            vehicule_data = extract_data_vehicule(request, client, erreurs)
+            if vehicule_data.get('id'):
+                vehicule = get_vehicule_by_id(vehicule_data['id'])
+                if vehicule.client.id != client.id:
+                    erreurs['vehicule']['client'] = "Le véhicule appartient à un autre client"
+                    raise ValidationError("Erreur(s) dans le formulaire", details=erreurs)
+            else:
+                vehicule = create_vehicule(vehicule_data, client, erreurs)
+            logging.info(f"Vehicule data extracted: {vehicule}")
+            
+            interventions = extract_data_intervention(request, erreurs)
+            logging.info(f"Interventions data extracted: {interventions}")
+            mission_data = extract_data_mission(request, vehicule, client, erreurs, mission_id=None)
+            logging.info(f"Mission data extracted: {mission_data}")
+            mission_interventions = extract_data_mission_intervention(request, mission_data, interventions, erreurs)
+            logging.info(f"Mission Intervention data extracted: {mission_interventions}")
+            # Récuperation des données 
+            #  INFO:Client data extracted: Lilo Lila
+            # INFO:Vehicule data extracted: Audi A5
+            # INFO:Interventions data extracted: {'interventions': [<Intervention: Intervention ob ject (2)>, <Intervention: Intervention object (3)>]}
+            # INFO:Mission data extracted: {'id': None, 'remarque': '', 'priorite': 'BASSE', 'vehicule': <Vehicule: Audi A5>, 'client': <Client: Lilo Lila>}
+            # INFO:Mission Intervention data extracted: [{'mission': {'id': None, 'remarque': '', 'priorite': 'BASSE', 'vehicule': <Vehicule: Audi A5>, 'client': <Client: Lilo Lila>}, 
+            # 'intervention': <Intervention: Intervention object (2)>, 'duree_supplementaire': 0.0, 'taux': 'T2', 'cout_total': 250.0},
+            # {'mission': {'id': None, 'remarque': '', 'priorite': 'BASSE', 'vehicule': <Vehicule: Audi A5>, 'client': <Client: Lilo Lila>}, 
+            # 'intervention': <Intervention: Intervention object (3)>, 'duree_supplementaire': 0.0, 'taux': 'T2', 'cout_total': 800.0}]                mission = create_taches(mission_interventions, client, vehicule)
+            create_taches(mission_interventions, client, vehicule)
+            messages.success(request, f'Mission créée avec succès pour le client {client.prenom} {client.nom}!')
+            return redirect('list_view')
+    
+    except ValidationError as ve:
+        logging.error(f"Validation error: {ve.message}")
         return render_with_error_handling(request, 'new_mission.html', {
+            'erreurs': erreurs,
+            'valeurs': request.POST.dict(),
             'clients': Client.objects.all(),
             'vehicules': Vehicule.objects.all(),
             'interventions': Intervention.objects.all(),
             'priorites': [(choix.name, choix.value) for choix in Priorite],
-            'taux': [(choix.name, choix.value) for choix in Taux]
+            'taux': [(choix.name, choix.value) for choix in Taux] 
+            })
+    
+    except Exception as e:
+        logging.error(f"Error creating mission: {e}")
+        # Variable pour gérer l'affichage du template d'erreur
+        return render(request, 'error.html', {
+            'error': str(e),
+            'template_error': True,
+            'error_type': 'template_render_error'
         })
+
 @login_required
-def update_mission_view(request, mission_id):
+def get_update_mission_view(request, mission_id):
     """Affiche le formulaire de mise à jour d'une mission existante.
 
     Args:
@@ -140,56 +148,6 @@ def update_mission_view(request, mission_id):
             'cout_total': mi.cout_total        } for mi in mission_intervention_list
     ]
     
-    if request.method == 'POST':
-            try:
-                # Log des données POST reçues
-                logging.info(f"update_mission_view - POST data: {dict(request.POST)}")
-                
-                # 1. Extraction des données
-                client = extract_data_client(request, erreurs)
-                vehicule = extract_data_vehicule(request, client, erreurs)
-                interventions = extract_data_intervention(request, erreurs)
-                mission_data = extract_data_mission(request, vehicule, client, erreurs, mission_id)
-                mission_interventions = extract_data_mission_intervention(request, mission_data, interventions, erreurs)
-
-                # 2. Construction du paquet global
-                data = {
-                    'client': client,
-                    'vehicule': vehicule,
-                    'mission': mission_data,
-                    'mission_interventions': mission_interventions
-                }                # 3. Mise à jour dans la BDD
-                update_taches(data)
-
-                messages.success(request, f'Mission mise à jour avec succès!')
-                return redirect('list_view')
-            
-            except ValidationError as ve:
-                logging.warning(f"Validation error: {ve}")
-                return render_with_error_handling(request, 'update_mission.html', {
-                    'erreurs': erreurs,
-                    'valeurs': request.POST.dict(),
-                    'mission': mission,
-                    'mission_intervention': {
-                        'mission': mission,
-                        'mission_intervention_list': mission_intervention_list,
-                        'vehicule': mission.vehicule,
-                        'client': mission.client,
-                    },
-                    'mission_intervention_list': mission_intervention_display,
-                    'interventions': Intervention.objects.all(),
-                    'priorites': [(choix.name, choix.value) for choix in Priorite],
-                    'taux': [(choix.name, choix.value) for choix in Taux],
-                })
-            except Exception as e:
-                logging.error(f"Error updating GLOBAL: {e}")
-                return render(request, 'error.html', {
-                    'error': str(e),
-                    'template_error': True,
-                    'error_type': 'template_render_error'
-                })
-
-    # GET : affichage du formulaire
     return render_with_error_handling(request, 'update_mission.html', {
         'mission': mission,
         'mission_intervention': {
@@ -204,6 +162,92 @@ def update_mission_view(request, mission_id):
         'taux': [(choix.name, choix.value) for choix in Taux],
         'erreurs': erreurs,
     })
+
+def post_update_mission_view(request, mission_id):
+    """Traite les données du formulaire de mise à jour d'une mission existante.
+
+    Args:
+        request (HttpRequest): La requête HTTP contenant les données du formulaire.
+        mission_id (int): L'identifiant de la mission à mettre à jour.
+    Returns:
+        HttpResponse: La réponse HTTP redirigeant vers la liste des missions ou affichant une erreur.
+    """
+    erreurs = {
+        'client': {},
+        'vehicule': {},
+        'mission': {},
+        'intervention': {},
+        'mission_intervention': {}
+    }
+    mission_intervention_list = get_all_mission_intervention_by_id(mission_id)
+    mission = get_mission_by_id(mission_id)
+    if not mission:
+        logging.error(f"Mission with id {mission_id} does not exist.")
+        return render_with_error_handling(request, 'error.html', {
+            'error': str(e),
+            'template_error': True,
+            'error_type': 'template_render_error'
+        })
+
+    mission_intervention_display = [
+        {
+            'id': mi.id,
+            'id_intervention': mi.intervention.id,
+            'libelle': mi.intervention.libelle,
+            'prix_unitaire': mi.intervention.prix_unitaire,
+            'taux': mi.taux,
+            'priorite': mi.mission.priorite,
+            'cout_total': mi.cout_total        } for mi in mission_intervention_list
+    ]
+    try:
+        # Log des données POST reçues
+        logging.info(f"update_mission_view - POST data: {dict(request.POST)}")
+        
+        # 1. Extraction des données
+        client = extract_data_client(request, erreurs)
+        vehicule = extract_data_vehicule(request, client, erreurs)
+        interventions = extract_data_intervention(request, erreurs)
+        mission_data = extract_data_mission(request, vehicule, client, erreurs, mission_id)
+        mission_interventions = extract_data_mission_intervention(request, mission_data, interventions, erreurs)
+
+        # 2. Construction du paquet global
+        data = {
+            'client': client,
+            'vehicule': vehicule,
+            'mission': mission_data,
+            'mission_interventions': mission_interventions
+        }                # 3. Mise à jour dans la BDD
+        update_taches(data, erreurs)
+
+        messages.success(request, f'Mission mise à jour avec succès!')
+        return redirect('list_view')
+    
+    except ValidationError as ve:
+        logging.warning(f"Validation error: {ve}")
+        return render_with_error_handling(request, 'update_mission.html', {
+            'erreurs': erreurs,
+            'valeurs': request.POST.dict(),
+            'mission': mission,
+            'mission_intervention': {
+                'mission': mission,
+                'mission_intervention_list': mission_intervention_list,
+                'vehicule': mission.vehicule,
+                'client': mission.client,
+            },
+            'mission_intervention_list': mission_intervention_display,
+            'interventions': Intervention.objects.all(),
+            'priorites': [(choix.name, choix.value) for choix in Priorite],
+            'taux': [(choix.name, choix.value) for choix in Taux],
+        })
+    except Exception as e:
+        logging.error(f"Error updating GLOBAL: {e}")
+        return render(request, 'error.html', {
+            'error': str(e),
+            'template_error': True,
+            'error_type': 'template_render_error'
+        })
+
+    # GET : affichage du formulaire
 
 @login_required
 def delete_mission_view(request, mission_id):

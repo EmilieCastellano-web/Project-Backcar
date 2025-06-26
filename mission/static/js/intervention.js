@@ -57,7 +57,7 @@ Cette action ne peut pas être annulée !`);
 }
 
 // Fonction pour confirmer la suppression avec un formulaire simple
-function confirmDeleteInterventionForm(interventionId, libelle) {
+function confirmDeleteInterventionForm(libelle) {
     return confirm(`Êtes-vous sûr de vouloir supprimer l'intervention "${libelle}" ?`);
 }
 

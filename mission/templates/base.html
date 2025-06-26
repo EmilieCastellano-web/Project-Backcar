@@ -108,16 +108,7 @@
         .message.fade-out {
             animation: slideOut 0.3s ease-out forwards;
         }
-        
-        /* Responsive */
-        @media (max-width: 480px) {
-            .messages-container {
-                top: 10px;
-                right: 10px;
-                left: 10px;
-                max-width: none;
-            }
-        }
+
     </style>
     
     {% block extra_css %}{% endblock %}
@@ -131,26 +122,15 @@
             
             <div>
                 <ul>
-                    <li>
-                        <a href="{% url 'mission_form_view' %}">
-                            Nouvelle Mission
-                        </a>
-                    </li>
+                    <li><a href="{% url 'get_mission_form_view' %}">Nouvelle Mission</a></li>
                 </ul>
-                
                 <ul>
                     {% if user.is_authenticated %}
                         <li>
-                            <a href="#">
-                                {{ user.username }}
-                            </a>
+                            <p>{{ user.username }}</p>
                             <ul>
-                                <li><a href="{% url 'admin:index' %}">
-                                    Administration
-                                </a></li>
-                                <li><a href="{% url 'list_interventions_view' %}">
-                                    Interventions
-                                </a></li>
+                                <li><a href="{% url 'admin:index' %}">Administration</a></li>
+                                <li><a href="{% url 'list_interventions_view' %}">Interventions</a></li>
                                 <li>
                                     <form method="post" action="{% url 'logout' %}">
                                         {% csrf_token %}
@@ -160,11 +140,7 @@
                             </ul>
                         </li>
                     {% else %}
-                        <li>
-                            <a href="{% url 'login' %}">
-                                Connexion
-                            </a>
-                        </li>
+                        <li><a href="{% url 'login' %}">Connexion</a></li>
                     {% endif %}
                 </ul>
             </div>
@@ -186,22 +162,18 @@
                         {% endif %}
                     </span>
                     <span class="message-text">{{ message }}</span>
-                        <button class="message-close" onclick="closeMessage('message-{{ forloop.counter }}')" title="Fermer">
-                        ×
-                    </button>
+                    <button class="message-close" onclick="closeMessage('message-{{ forloop.counter }}')" title="Fermer">×</button>
                 </div>
             {% endfor %}
         </div>
     {% endif %}
 
     <!-- Contenu Principal -->
-    <div>
-        {% block breadcrumb %}{% endblock %}
-        
+    <div>        
         {% block content %}
         <div>
             <div>
-                <h1>Bienvenue dans la gestion des missions</h1>
+                <label>Bienvenue dans la gestion des missions</label>
                 <p>Utilisez le menu de navigation pour accéder aux différentes fonctionnalités.</p>
             </div>
         </div>
@@ -211,10 +183,10 @@
     <!-- Footer -->
     <footer>
         <div>
-            <small>&copy; {% now "Y" %} Gestion des Missions - Tous droits réservés</small>
+            <p>&copy; {% now "Y" %} Gestion des Missions - Tous droits réservés</p>
         </div>
     </footer>
-      {% block extra_js %}{% endblock %}
+    {% block extra_js %}{% endblock %}
     
     <!-- JavaScript pour la gestion des messages -->
     <script>

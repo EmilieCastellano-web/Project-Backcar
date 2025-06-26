@@ -6,7 +6,7 @@
 {% endblock %}
 
 {% block content %}
-    <h1>Liste des Interventions</h1>
+    <h3>Liste des Interventions</h3>
     <table>
         <thead>
             <tr>
@@ -42,8 +42,7 @@
                                     data-libelle="{{ intervention.libelle }}"
                                     data-duree="{{ intervention.duree_intervention }}"
                                     data-prix="{{ intervention.prix_unitaire }}"
-                                    data-categorie="{{ intervention.get_categorie_display }}"
-                                    style="background: none; border: none; color: #007cba; text-decoration: underline; cursor: pointer;">
+                                    data-categorie="{{ intervention.get_categorie_display }}"> <!--get_<nom_champ>_display() est automatique pour les champs avec choices=.... -->
                                 Supprimer
                             </button>
                         </form>

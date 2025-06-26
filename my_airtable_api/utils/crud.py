@@ -56,6 +56,7 @@ def create_vehicule(data, client, erreurs):
             
         data.pop('client', None)  # retire 'client' si déjà présent
         data['client'] = client
+        vehicule.full_clean()
         vehicule = Vehicule.objects.create(**data)
         logging.info(f"Vehicle created for client {client.nom} {client.prenom}: {vehicule}")
         return vehicule
@@ -152,7 +153,7 @@ def create_mission_interventions(mission_interventions, erreurs):
         logging.error(f"Error creating mission interventions: {e}")
         raise ValidationError("Erreur lors de la création des interventions", details=erreurs)
 
-def update_client(data):
+def update_client(data, erreurs):
     """Met à jour les informations d'un client.
 
     Args:
@@ -173,10 +174,10 @@ def update_client(data):
         logging.info(f"Client mis à jour : {client}")
         return client
     except Client.DoesNotExist:
+        erreurs['client']['id'] = "Client introuvable."
         logging.error(f"Client introuvable : id={data.get('id')}")
-        raise ValidationError("Client introuvable.")
 
-def update_vehicule(data):
+def update_vehicule(data, erreurs):
     """Met à jour les informations d'un véhicule.
 
     Args:
@@ -193,14 +194,18 @@ def update_vehicule(data):
         for key, value in data.items():
             if value is not None and key != 'id':
                 setattr(vehicule, key, value)
+        # vehicule.full_clean()
         vehicule.save()
         logging.info(f"Véhicule mis à jour : {vehicule}")
         return vehicule
     except Vehicule.DoesNotExist:
+        erreurs['vehicule']['id'] = "Véhicule introuvable."
         logging.error(f"Véhicule introuvable : id={data.get('id')}")
-        raise ValidationError("Véhicule introuvable.")
+    except Exception as e:
+        erreurs['vehicule']['error'] = str(e)
+        logging.error(f"Erreur lors de la mise à jour du véhicule : {e}")
             
-def update_taches(data):
+def update_taches(data, erreurs):
     """Met à jour les tâches (mission, client, véhicule) à partir des données fournies.
 
     Args:
@@ -211,22 +216,23 @@ def update_taches(data):
     """
     try:
         with transaction.atomic():
-            client = update_client(data['client'])
-            vehicule = update_vehicule(data['vehicule'])
+            client = update_client(data['client'], erreurs)
+            vehicule = update_vehicule(data['vehicule'], erreurs)
 
             mission_data = data['mission']
             mission_data['client'] = client
             mission_data['vehicule'] = vehicule
-            mission = update_mission(mission_data)
+            mission = update_mission(mission_data, erreurs)
 
             update_mission_interventions(data['mission_interventions'], mission)
 
             return mission
     except Exception as e:
-        logging.error(f"Erreur dans update_taches : {e}")
+        erreurs['mission']['error'] = str(e)
+        logging.error(f"Erreur lors de la mise à jour des tâches : {e}")
         raise
     
-def update_mission(data):
+def update_mission(data, erreurs):
     """Met à jour les informations d'une mission.
 
     Args:
@@ -248,8 +254,8 @@ def update_mission(data):
         logging.info(f"Mission mise à jour : {mission}")
         return mission
     except Mission.DoesNotExist:
+        erreurs['mission']['id'] = "Mission introuvable."
         logging.error(f"Mission introuvable : id={data.get('id')}")
-        raise ValidationError("Mission introuvable.")
     
 def update_mission_interventions(interventions_data, mission):
     """Met à jour les interventions liées à une mission.
@@ -260,21 +266,16 @@ def update_mission_interventions(interventions_data, mission):
 
     Returns:
         list: Liste des objets MissionIntervention mis à jour.
-    """
-    logging.info(f"update_mission_interventions - Mission ID: {mission.id}")
-    logging.info(f"update_mission_interventions - Interventions reçues: {len(interventions_data)}")
-    
+    """    
     # Récupérer les interventions actuelles avant suppression pour logs
     current_interventions = MissionIntervention.objects.filter(mission=mission)
     logging.info(f"update_mission_interventions - Interventions actuelles avant suppression: {[mi.intervention.id for mi in current_interventions]}")
     
     MissionIntervention.objects.filter(mission=mission).delete()  # reset
-    logging.info("update_mission_interventions - Toutes les interventions actuelles supprimées")
     
     updated = []
 
     for mi in interventions_data:
-        logging.info(f"update_mission_interventions - Création intervention: {mi['intervention'].id} - {mi['intervention'].libelle}")
         mi_obj = MissionIntervention.objects.create(
             mission=mission,
             intervention=mi['intervention'],
