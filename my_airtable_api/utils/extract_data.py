@@ -136,10 +136,10 @@ def extract_data_vehicule(request, client, erreurs):
             erreurs['vehicule']['immatriculation'] = "L'immatriculation doit comporter 9 caractères alphanumériques"
         if not vehicule['numero_serie'] or len(vehicule['numero_serie']) != 17:
             erreurs['vehicule']['numero_serie'] = "Le numéro de série doit comporter 17 caractères"
-        km = int(vehicule['kilometrage'])
-        if km < 0:
-            erreurs['vehicule']['kilometrage'] = "Le kilométrage doit être un nombre entier positif"
-        
+            km = int(vehicule['kilometrage'])
+            if km < 0:
+                erreurs['vehicule']['kilometrage'] = "Le kilométrage doit être un nombre entier positif"
+            
         if not vehicule['boite_vitesse']:
             erreurs['vehicule']['boite_vitesse'] = "La boîte de vitesse est requise"
         if not vehicule['carburant']:
@@ -261,17 +261,30 @@ def extract_data_mission_intervention(request, mission, interventions, erreurs):
         list: Une liste de dictionnaires contenant les données des interventions de mission
     """
     mission_interventions = []
-    cout_total = 0.0  
+    cout_total = 0.0    
+    taux = request.POST.get(f'taux', '')
+    # logging.info(f"extract_data_mission_intervention - Taux reçu: '{taux}'")
+    match taux:
+        case 'HORAIRE':
+            taux_calcul = 1.0
+        case 'T1':
+            taux_calcul = 1.5
+        case 'T2':
+            taux_calcul = 2.0
+        case 'T3':
+            taux_calcul = 2.5 
+    
     for intervention in interventions['interventions']:
         try:
             duree_supp = float(request.POST.get(f'duree_supplementaire_{intervention.id}', 0.0))
-            taux = request.POST.get(f'taux', '')
-            
+                    
             if intervention.is_forfait:
                 cout = float(intervention.forfait)
             else:
-                cout = float(intervention.prix_unitaire) * (duree_supp or 1.0)
-
+                cout = float(intervention.prix_unitaire) * taux_calcul
+            if duree_supp > 0:   
+                cout *= duree_supp or 1.0
+                
             cout_total += cout
             
             mission_intervention = {
@@ -282,6 +295,7 @@ def extract_data_mission_intervention(request, mission, interventions, erreurs):
                 'cout_total': cout
             }
             erreurs.setdefault('mission_intervention', {})
+            logging.info (f"MISSION INTERVENTION: {mission_intervention}")
 
             if mission_intervention['cout_total'] < 0:
                 erreurs['mission_intervention']['cout_total'] = "Le coût total ne peut pas être négatif"

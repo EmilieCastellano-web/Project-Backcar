@@ -71,7 +71,7 @@ def list_view(request):
         except ValueError:
             pass  # Ignorer les dates mal formatées
     
-    missions_interventions = missions_interventions_query.all()
+    missions_interventions = missions_interventions_query.all().order_by('mission__date_demande')
     
     missions_group = {}
     for mi in missions_interventions:
@@ -100,7 +100,7 @@ def list_view(request):
     
     
     # Récupération de la table Véhicule avec les relations nécessaires
-    vehicules = Vehicule.objects.all()
+    vehicules = Vehicule.objects.all().order_by('marque', 'modele')
     vehicules_group = {}
     for vehicule in vehicules:
         vehicules_group[vehicule.id] = {
@@ -133,7 +133,7 @@ def list_view(request):
                 })
     vehicules = list(vehicules_group.values())  
     # Récupération de la table Client
-    clients = Client.objects.all()
+    clients = Client.objects.all().order_by('nom', 'prenom')
     clients_group = {}
     for client in clients:
         clients_group[client.id] = {

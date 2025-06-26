@@ -56,7 +56,7 @@ def create_vehicule(data, client, erreurs):
             
         data.pop('client', None)  # retire 'client' si déjà présent
         data['client'] = client
-        vehicule.full_clean()
+        # vehicule.full_clean()
         vehicule = Vehicule.objects.create(**data)
         logging.info(f"Vehicle created for client {client.nom} {client.prenom}: {vehicule}")
         return vehicule
@@ -85,9 +85,7 @@ def create_taches(mission_interventions, client, vehicule):
             mission_data['client'] = client
             mission_data['vehicule'] = vehicule
 
-            interventions = [mi['intervention'] for mi in mission_interventions]
-
-            mission = create_mission(mission_data, interventions, erreurs={})
+            mission = create_mission(mission_data, erreurs={})
 
             # Création des liaisons mission-intervention
             mission_intervention_list = []
@@ -108,7 +106,7 @@ def create_taches(mission_interventions, client, vehicule):
         logging.error(f"Error in create_taches: {e}")
         raise ValidationError("Erreur lors de la création des tâches")
 
-def create_mission(mission_data, interventions, erreurs):
+def create_mission(mission_data, erreurs):
     """Crée une mission à partir des données fournies.
 
     Args:

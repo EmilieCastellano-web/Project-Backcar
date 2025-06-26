@@ -83,7 +83,10 @@
                 {% for champ, message in erreurs.mission.items %}
                     <p style="color:red;">{{ message }}</p>
                 {% endfor %}
-            {% endif %}        <label for="priorite">Priorité :</label>
+            {% endif %}   <!--TODDO mettre en place la durée supp-->     
+            <label for="duree_supplementaire">Durée Supplémentaire (en heures) :</label>
+            <input type="number" id="duree_supplementaire" name="duree_supplementaire" step="0.01" value="{{ valeurs.duree_supplementaire|default_if_none:'' }}">
+            <label for="priorite">Priorité :</label>
             <select id="priorite" name="priorite" required>
                 <option value="">-- Choisis une priorité --</option>
                 {% for name, label in priorites %}

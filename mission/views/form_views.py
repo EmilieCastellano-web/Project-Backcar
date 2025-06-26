@@ -16,10 +16,8 @@ from django.contrib import messages
 @login_required
 def get_mission_form_view(request):
     """Fonction pour afficher le formulaire de création d'une nouvelle mission.
-
     Args:
-        request (): HttpRequest: La requête HTTP contenant les données du formulaire.
-
+        request (HttpRequest): La requête HTTP pour afficher le formulaire.
     Returns:
         HttpResponse: La réponse HTTP contenant le rendu du template du formulaire de création de mission.
     """
@@ -51,13 +49,13 @@ def post_mission_form_view(request):
         with transaction.atomic():
             # 1. Extraction des données
             client_data = extract_data_client(request, erreurs)
-            logging.info(f"Client data extracted: {client_data}")
+            # logging.info(f"Client data extracted: {client_data}")
             if client_data.get('id'): 
                 client = get_client_by_id(client_data['id'])  # objet existant
             else:
                 client = create_client(client_data, erreurs)  # sinon on le crée
 
-            logging.info(f"Client data extracted: {client}")
+            # logging.info(f"Client data extracted: {client}")
             
             vehicule_data = extract_data_vehicule(request, client, erreurs)
             if vehicule_data.get('id'):
@@ -67,14 +65,14 @@ def post_mission_form_view(request):
                     raise ValidationError("Erreur(s) dans le formulaire", details=erreurs)
             else:
                 vehicule = create_vehicule(vehicule_data, client, erreurs)
-            logging.info(f"Vehicule data extracted: {vehicule}")
+            # logging.info(f"Vehicule data extracted: {vehicule}")
             
             interventions = extract_data_intervention(request, erreurs)
-            logging.info(f"Interventions data extracted: {interventions}")
+            # logging.info(f"Interventions data extracted: {interventions}")
             mission_data = extract_data_mission(request, vehicule, client, erreurs, mission_id=None)
-            logging.info(f"Mission data extracted: {mission_data}")
+            # logging.info(f"Mission data extracted: {mission_data}")
             mission_interventions = extract_data_mission_intervention(request, mission_data, interventions, erreurs)
-            logging.info(f"Mission Intervention data extracted: {mission_interventions}")
+            # logging.info(f"Mission Intervention data extracted: {mission_interventions}")
             # Récuperation des données 
             #  INFO:Client data extracted: Lilo Lila
             # INFO:Vehicule data extracted: Audi A5
@@ -111,14 +109,14 @@ def post_mission_form_view(request):
 
 @login_required
 def get_update_mission_view(request, mission_id):
-    """Affiche le formulaire de mise à jour d'une mission existante.
+    """Fonction pour afficher le formulaire de mise à jour d'une mission existante.
 
     Args:
-        request (HttpRequest): La requête HTTP contenant les données du formulaire.
+        request (HttpRequest): La requête HTTP pour afficher le formulaire de mise à jour.
         mission_id (int): L'identifiant de la mission à mettre à jour.
 
     Returns:
-        HttpResponse: La réponse HTTP contenant le rendu du template du formulaire de mise à jour de la mission.
+        HttpResponse: La réponse HTTP contenant le rendu du template de mise à jour de mission.
     """
     erreurs = {
         'client': {},
@@ -132,7 +130,7 @@ def get_update_mission_view(request, mission_id):
     if not mission:
         logging.error(f"Mission with id {mission_id} does not exist.")
         return render_with_error_handling(request, 'error.html', {
-            'error': str(e),
+            'error':  f"Mission with id {mission_id} does not exist.",
             'template_error': True,
             'error_type': 'template_render_error'
         })
@@ -163,6 +161,7 @@ def get_update_mission_view(request, mission_id):
         'erreurs': erreurs,
     })
 
+@login_required
 def post_update_mission_view(request, mission_id):
     """Traite les données du formulaire de mise à jour d'une mission existante.
 
@@ -197,12 +196,11 @@ def post_update_mission_view(request, mission_id):
             'prix_unitaire': mi.intervention.prix_unitaire,
             'taux': mi.taux,
             'priorite': mi.mission.priorite,
-            'cout_total': mi.cout_total        } for mi in mission_intervention_list
-    ]
-    try:
-        # Log des données POST reçues
-        logging.info(f"update_mission_view - POST data: {dict(request.POST)}")
+            'cout_total': mi.cout_total        
         
+        } for mi in mission_intervention_list
+    ]
+    try:        
         # 1. Extraction des données
         client = extract_data_client(request, erreurs)
         vehicule = extract_data_vehicule(request, client, erreurs)
@@ -216,7 +214,8 @@ def post_update_mission_view(request, mission_id):
             'vehicule': vehicule,
             'mission': mission_data,
             'mission_interventions': mission_interventions
-        }                # 3. Mise à jour dans la BDD
+        }                
+        # 3. Mise à jour dans la BDD
         update_taches(data, erreurs)
 
         messages.success(request, f'Mission mise à jour avec succès!')
@@ -246,9 +245,7 @@ def post_update_mission_view(request, mission_id):
             'template_error': True,
             'error_type': 'template_render_error'
         })
-
-    # GET : affichage du formulaire
-
+        
 @login_required
 def delete_mission_view(request, mission_id):
     """Vue pour supprimer une mission avec ses relations.
