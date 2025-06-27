@@ -1,9 +1,12 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}Créer une intervention{% endblock %}
 
 {% block content %}
     <form method="post">
         {% csrf_token %}
-        <h2>{{ title }}</h2>
+        <h2>Créer une intervention</h2>
         {{ form.as_p }}
         <button type="submit">{{ action }}</button>
     </form>
@@ -17,4 +20,7 @@
             {% endif %}
         </div>
     {% endif %}
+{% endblock %}
+{% block extra_js %}
+    <script src="{% static 'js/intervention.js' %}"></script>
 {% endblock %}

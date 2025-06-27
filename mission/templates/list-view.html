@@ -82,13 +82,12 @@
                     <td>
                         {% for intervention in mission.interventions %}
                             {{ intervention.libelle }}{% if not forloop.last %}, {% endif %}
+                            {{intervention.duree_supplementaire|floatformat:2}} h
                         {% endfor %} 
                     </td>
                     {% if user.is_authenticated %}
                         <td>
                             <a href="{% url 'edit_mission' mission.id %}">Modifier</a>
-                        </td>
-                        <td>
                             <a href="{% url 'show_mission' mission.id %}">Voir</a>
                         </td>
                     {% endif %}

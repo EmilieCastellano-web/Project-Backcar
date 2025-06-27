@@ -7,6 +7,10 @@ class InterventionForm(forms.ModelForm):
         model = Intervention
         # Exclure les champs de date qui seront gérés automatiquement
         exclude = ['date_creation', 'date_modification']
+        # Définir que forfait est un champ optionnel
+        widgets = {
+            'forfait': forms.NumberInput(attrs={'step': '0.01', 'min': '0'}),
+        }
         
     def save(self, commit=True):
         """Enregistre l'intervention.

@@ -1,6 +1,6 @@
 from django.db import models
 from django.core import validators
-from django.db.models import FloatField
+from django.db.models import DecimalField
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
@@ -25,21 +25,19 @@ class Taux(Enum):
     T2 = "T2"
     T3 = "T3"
     
-class PositiveFloatField(FloatField):
-    description = _("Positive Float")
+class PositiveDecimalField(DecimalField):
+    description = _("Positive Decimal Field")
+
+    def __init__(self, verbose_name=None, name=None, max_digits=6, decimal_places=2, **kwargs):
+        kwargs['max_digits'] = max_digits
+        kwargs['decimal_places'] = decimal_places
+        super().__init__(verbose_name, name, **kwargs)
 
     @cached_property
     def validators(self):
         validators_ = super().validators
-
         validators_.append(validators.MinValueValidator(0.0))
         return validators_
-
-    def formfield(self, **kwargs):
-        return super().formfield(**{
-            'min_value': 0.0,
-            **kwargs,
-        })
 
 class Client(models.Model):
     class Meta:
@@ -86,9 +84,9 @@ class Vehicule(models.Model):
     
 class Intervention(models.Model):
     libelle = models.CharField(verbose_name="libellé", null=False, max_length=100)
-    duree_intervention = PositiveFloatField(verbose_name="durée", null=False, default=0.00)
-    prix_unitaire = PositiveFloatField(verbose_name="prix unitaire", null=False, default=0.00)
-    forfait = PositiveFloatField(verbose_name="forfait", null=False, default=0.00)
+    duree_intervention = PositiveDecimalField(verbose_name="durée", null=False, default=0.00, max_digits=6, decimal_places=2)
+    prix_unitaire = PositiveDecimalField(verbose_name="prix unitaire", blank=True, default=0.00, max_digits=6, decimal_places=2)
+    forfait = PositiveDecimalField(verbose_name="forfait", default=0.00, blank=True, max_digits=6, decimal_places=2)
     is_forfait = models.BooleanField(verbose_name="is_forfait", default=False)
     date_creation = models.DateField(verbose_name="date de création", default=timezone.now, null=False)
     date_modification = models.DateField(verbose_name="date de modification", null=True)
@@ -124,9 +122,9 @@ class MissionIntervention(models.Model):
         
     mission = models.ForeignKey(verbose_name="mission", to=Mission, on_delete=models.CASCADE, null=False)
     intervention = models.ForeignKey(verbose_name="intervention", to=Intervention, on_delete=models.CASCADE, null=False)
-    duree_supplementaire = PositiveFloatField(verbose_name="durée supplémentaire", null=True, default=0.00)
+    duree_supplementaire = PositiveDecimalField(verbose_name="durée supplémentaire", null=True, default=0.00, max_digits=6, decimal_places=2)
     taux = models.CharField(verbose_name="taux horaire", null=False, choices=[(choix.name, choix.value) for choix in Taux])
-    cout_total = PositiveFloatField(verbose_name="total", null=False, default=0.00)
+    cout_total = PositiveDecimalField(verbose_name="total", null=False, default=0.00, max_digits=6, decimal_places=2)
     
     
     

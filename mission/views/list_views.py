@@ -87,6 +87,7 @@ def list_view(request):
                 'vehicule': f"{mission.vehicule.marque} {mission.vehicule.modele} {mission.vehicule.immatriculation}",
                 'client': f"{mission.client.nom} {mission.client.prenom}",
                 'cout_total': mi.cout_total,
+                'duree_supplementaire': mi.duree_supplementaire,
                 'interventions': []
             }
         missions_group[mission_id]['interventions'].append({

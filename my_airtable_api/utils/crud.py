@@ -93,7 +93,6 @@ def create_taches(mission_interventions, client, vehicule):
                 mi_data = {
                     'mission': mission,
                     'intervention': mi['intervention'],
-                    'duree_supplementaire': mi['duree_supplementaire'],
                     'taux': mi['taux'],
                     'cout_total': mi['cout_total']
                 }
@@ -277,7 +276,6 @@ def update_mission_interventions(interventions_data, mission):
         mi_obj = MissionIntervention.objects.create(
             mission=mission,
             intervention=mi['intervention'],
-            duree_supplementaire=mi.get('duree_supplementaire', 0.0),
             taux=mi['taux'],
             cout_total=mi['cout_total']
         )

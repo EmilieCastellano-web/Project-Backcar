@@ -102,3 +102,37 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+// Fonction pour disable l'input de forfait si is_forfait est false
+function toggleForfaitInput(isForfait) {
+    const forfaitInput = document.getElementById('id_forfait');
+    const prixInput = document.getElementById('id_prix_unitaire');
+    console.log('toggleForfaitInput called with isForfait:', isForfait);
+    console.log('Forfait input element:', forfaitInput);
+    if (forfaitInput) {
+        if (isForfait) {
+            forfaitInput.disabled = false;
+            prixInput.disabled = true;
+            prixInput.value = ''; // Réinitialiser la valeur si activé
+        } else {
+            forfaitInput.disabled = true;
+            forfaitInput.value = ''; // Réinitialiser la valeur si désactivé
+            prixInput.disabled = false; // Activer le champ prix unitaire
+        }
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Gestion des cases à cocher pour les interventions forfaitaires
+    const forfaitCheckInput = document.getElementById('id_is_forfait');
+    console.log('Forfait check input element:', forfaitCheckInput);
+    if (forfaitCheckInput) {
+        forfaitCheckInput.addEventListener('change', function() {
+            const isForfait = this.checked;
+            toggleForfaitInput(isForfait);
+        });
+
+        // Initialisation de l'état de l'input forfait
+        toggleForfaitInput(forfaitCheckInput.checked);
+    }
+});

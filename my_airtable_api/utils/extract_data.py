@@ -87,7 +87,7 @@ def extract_data_vehicule(request, client, erreurs):
     Returns:
         dict: Un dictionnaire contenant les données du véhicule
     """
-    compare_km = MinValueValidator(0)
+    # compare_km = MinValueValidator(0)
     
     mode = ""
     if '/new/' in request.path:
@@ -136,9 +136,6 @@ def extract_data_vehicule(request, client, erreurs):
             erreurs['vehicule']['immatriculation'] = "L'immatriculation doit comporter 9 caractères alphanumériques"
         if not vehicule['numero_serie'] or len(vehicule['numero_serie']) != 17:
             erreurs['vehicule']['numero_serie'] = "Le numéro de série doit comporter 17 caractères"
-            km = int(vehicule['kilometrage'])
-            if km < 0:
-                erreurs['vehicule']['kilometrage'] = "Le kilométrage doit être un nombre entier positif"
             
         if not vehicule['boite_vitesse']:
             erreurs['vehicule']['boite_vitesse'] = "La boîte de vitesse est requise"
@@ -147,7 +144,6 @@ def extract_data_vehicule(request, client, erreurs):
         if erreurs['vehicule']:
             raise ValidationError("Erreur(s) dans le formulaire", details=erreurs)
         
-        vehicule['kilometrage'] = km
         
     if mode == "update":
         
@@ -194,7 +190,9 @@ def extract_data_intervention(request, erreurs):
                     logging.error(f"Erreur lors de la récupération de l'intervention {intervention_id}: {e}")
                     erreurs['intervention'][intervention_id] = f"L'intervention avec l'ID {intervention_id} n'existe pas"
                     raise ValidationError("Erreur(s) dans le formulaire", details=erreurs)
-    
+    if not interventions:
+        erreurs['intervention']['interventions'] = "Aucune intervention sélectionnée"
+        raise ValidationError("Erreur(s) dans le formulaire", details=erreurs)
     logging.info(f"extract_data_intervention - Total interventions extraites: {len(interventions)}")
     return {'interventions': interventions}
 
@@ -276,8 +274,9 @@ def extract_data_mission_intervention(request, mission, interventions, erreurs):
     
     for intervention in interventions['interventions']:
         try:
-            duree_supp = float(request.POST.get(f'duree_supplementaire_{intervention.id}', 0.0))
-                    
+            duree_supp = float(request.POST.get(f'duree_supplementaire', 0.0))
+            duree_supp_total = duree_supp + float(intervention.duree_supplementaire or 0.0)  # Ajout de la durée supplémentaire de l'intervention existante
+            logging.info(f"Intervention ID: {intervention.id}, Durée Supplémentaire: {duree_supp}, Durée Totale: {duree_supp_total}")        
             if intervention.is_forfait:
                 cout = float(intervention.forfait)
             else:
@@ -290,7 +289,7 @@ def extract_data_mission_intervention(request, mission, interventions, erreurs):
             mission_intervention = {
                 'mission': mission,
                 'intervention': intervention,
-                'duree_supplementaire': duree_supp, 
+                'duree_supplementaire': duree_supp_total, 
                 'taux': taux,
                 'cout_total': cout
             }
