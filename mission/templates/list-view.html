@@ -52,11 +52,6 @@
             <option value="clients">Clients</option>
         </select>
     </div>
-    {% comment %} {%for mission in missions%}
-        <p>
-            {{mission}}
-        </p>
-    {% endfor %} {% endcomment %}
     <br><br>
     <div id="missions-list">
         <label>Liste des Missions Interventions</label>
@@ -90,7 +85,7 @@
                             {{ intervention.libelle }}{% if not forloop.last %}, {% endif %}
                         {% endfor %} 
                     </td>
-                    <td>{{ mission.duree_supplementaire|default:"Non renseignée" }}</td>
+                    <td>{{ mission.duree_supplementaire|default:"0.00" }}</td>
                     
                     {% if user.is_authenticated %}
                         <td>

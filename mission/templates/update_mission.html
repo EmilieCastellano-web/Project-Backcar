@@ -84,7 +84,6 @@
                     <p style="color:red;">{{ message }}</p>
                 {% endfor %}
             {% endif %}
-            <!--TODDO mettre en place la durée supp-->     
             <label for="duree_supplementaire">Durée Supplémentaire (en heures) :</label>
             <input type="number" id="duree_supplementaire" name="duree_supplementaire" step="0.01" value="{{ valeurs.duree_supplementaire|default_if_none:'' }}">
             <label for="priorite">Priorité :</label>

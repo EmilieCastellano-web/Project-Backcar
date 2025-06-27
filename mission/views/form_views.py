@@ -49,13 +49,13 @@ def post_mission_form_view(request):
         with transaction.atomic():
             # 1. Extraction des données
             client_data = extract_data_client(request, erreurs)
-            # logging.info(f"Client data extracted: {client_data}")
+            logging.info(f"Client data extracted: {client_data}")
             if client_data.get('id'): 
                 client = get_client_by_id(client_data['id'])  # objet existant
             else:
                 client = create_client(client_data, erreurs)  # sinon on le crée
 
-            # logging.info(f"Client data extracted: {client}")
+            logging.info(f"Client data extracted: {client}")
             
             vehicule_data = extract_data_vehicule(request, client, erreurs)
             if vehicule_data.get('id'):
@@ -65,23 +65,24 @@ def post_mission_form_view(request):
                     raise ValidationError("Erreur(s) dans le formulaire", details=erreurs)
             else:
                 vehicule = create_vehicule(vehicule_data, client, erreurs)
-            # logging.info(f"Vehicule data extracted: {vehicule}")
+            logging.info(f"Vehicule data extracted: {vehicule}")
             
             interventions = extract_data_intervention(request, erreurs)
-            # logging.info(f"Interventions data extracted: {interventions}")
+            logging.info(f"Interventions data extracted: {interventions}")
             mission_data = extract_data_mission(request, vehicule, client, erreurs, mission_id=None)
-            # logging.info(f"Mission data extracted: {mission_data}")
+            logging.info(f"Mission data extracted: {mission_data}")
             mission_interventions = extract_data_mission_intervention(request, mission_data, interventions, erreurs)
-            # logging.info(f"Mission Intervention data extracted: {mission_interventions}")
+            logging.info(f"Mission Intervention data extracted: {mission_interventions}")
             # Récuperation des données 
-            #  INFO:Client data extracted: Lilo Lila
-            # INFO:Vehicule data extracted: Audi A5
-            # INFO:Interventions data extracted: {'interventions': [<Intervention: Intervention ob ject (2)>, <Intervention: Intervention object (3)>]}
-            # INFO:Mission data extracted: {'id': None, 'remarque': '', 'priorite': 'BASSE', 'vehicule': <Vehicule: Audi A5>, 'client': <Client: Lilo Lila>}
-            # INFO:Mission Intervention data extracted: [{'mission': {'id': None, 'remarque': '', 'priorite': 'BASSE', 'vehicule': <Vehicule: Audi A5>, 'client': <Client: Lilo Lila>}, 
-            # 'intervention': <Intervention: Intervention object (2)>, 'duree_supplementaire': 0.0, 'taux': 'T2', 'cout_total': 250.0},
-            # {'mission': {'id': None, 'remarque': '', 'priorite': 'BASSE', 'vehicule': <Vehicule: Audi A5>, 'client': <Client: Lilo Lila>}, 
-            # 'intervention': <Intervention: Intervention object (3)>, 'duree_supplementaire': 0.0, 'taux': 'T2', 'cout_total': 800.0}]                mission = create_taches(mission_interventions, client, vehicule)
+            # INFO:Client data extracted: Samy Samy
+            # my_airtable_api     | INFO:Vehicle created for client Samy Samy: Renault Clio
+            # my_airtable_api     | INFO:Vehicule data extracted: Renault Clio
+            # my_airtable_api     | INFO:extract_data_intervention - IDs reçus: '3,7'
+            # my_airtable_api     | INFO:Intervention trouvée: 3 - Contrôle technique
+            # my_airtable_api     | INFO:Intervention trouvée: 7 - Diagnostic électronique
+            # my_airtable_api     | INFO:extract_data_intervention - Total interventions extraites: 2
+            # my_airtable_api     | INFO:Interventions data extracted: {'interventions': [<Intervention: Intervention object (3)>, <Intervention: Intervention object (7)>]}
+            # my_airtable_api     | INFO:Mission data extracted: {'id': None, 'remarque': '', 'priorite': 'URGENTE', 'vehicule': <Vehicule: Renault Clio>, 'client': <Client: Samy Samy>}
             create_taches(mission_interventions, client, vehicule)
             messages.success(request, f'Mission créée avec succès pour le client {client.prenom} {client.nom}!')
             return redirect('list_view')

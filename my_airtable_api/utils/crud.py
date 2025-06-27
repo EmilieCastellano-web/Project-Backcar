@@ -150,6 +150,7 @@ def create_mission_interventions(mission_interventions, erreurs):
     except Exception as e:
         logging.error(f"Error creating mission interventions: {e}")
         raise ValidationError("Erreur lors de la création des interventions", details=erreurs)
+        # TODO: gérer les erreurs ELLE NE S AFFICHE PAS COMME LES AUTRES DANS LE HTML
 
 def update_client(data, erreurs):
     """Met à jour les informations d'un client.
