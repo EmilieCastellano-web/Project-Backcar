@@ -135,7 +135,6 @@ def get_update_mission_view(request, mission_id):
             'template_error': True,
             'error_type': 'template_render_error'
         })
-
     mission_intervention_display = [
         {
             'id': mi.id,
@@ -144,7 +143,10 @@ def get_update_mission_view(request, mission_id):
             'prix_unitaire': mi.intervention.prix_unitaire,
             'taux': mi.taux,
             'priorite': mi.mission.priorite,
-            'cout_total': mi.cout_total        } for mi in mission_intervention_list
+            'cout_total': mi.cout_total,
+            'remarque': mission.remarque if mission.remarque else '',
+            'duree_supplementaire': mi.duree_supplementaire if mi.duree_supplementaire else 0.0,
+            } for mi in mission_intervention_list
     ]
     
     return render_with_error_handling(request, 'update_mission.html', {

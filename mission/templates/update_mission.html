@@ -41,9 +41,9 @@
             {% endif %}  
 
             <label for="kilometrage">Kilométrage:</label>
-            <input type="number" id="kilometrage" name="kilometrage" value="{{ mission.vehicule.kilometrage|default_if_none:'' }}">       
+            <input type="number" id="kilometrage" name="kilometrage" value="{{ mission.vehicule.kilometrage|default:0.0}}">       
             <label for="remarque _vehicule">Remarque:</label>
-            <textarea id="remarque_vehicule" name="remarque_vehicule" rows="4" cols="50"></textarea>        
+            <textarea id="remarque_vehicule" name="remarque_vehicule" rows="4" cols="50">{{mission.vehicule.remarque|default:"Non Renseigné"}}</textarea>        
             <label for="vo">Véhicule d'Occasion:</label>
             <input type="checkbox" id="vo" name="vo" {% if mission.vehicule.vo %}checked{% endif %}>
 
@@ -85,7 +85,7 @@
                 {% endfor %}
             {% endif %}
             <label for="duree_supplementaire">Durée Supplémentaire (en heures) :</label>
-            <input type="number" id="duree_supplementaire" name="duree_supplementaire" step="0.01" value="{{ valeurs.duree_supplementaire|default_if_none:'' }}">
+            <input type="number" id="duree_supplementaire" name="duree_supplementaire" step="0.01" value="{{ mission.duree_supplementaire|default:0.00 }}">
             <label for="priorite">Priorité :</label>
             <select id="priorite" name="priorite" required>
                 <option value="">-- Choisis une priorité --</option>
@@ -94,7 +94,7 @@
                 {% endfor %}
             </select>        
             <label for="_mission">Remarque :</label>
-            <textarea id="remarque_mission" name="remarque_mission" rows="4" cols="50"></textarea>
+            <textarea id="remarque_mission" name="remarque_mission" rows="4" cols="50">{{mission.remarque|default:""}}</textarea>
             <label for="taux">Taux :</label>
             <select id="taux" name="taux" required>
                 <option value="">-- Choisis un taux --</option>
