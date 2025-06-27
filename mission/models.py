@@ -125,6 +125,4 @@ class MissionIntervention(models.Model):
     duree_supplementaire = PositiveDecimalField(verbose_name="durée supplémentaire", null=True, default=0.00, max_digits=6, decimal_places=2)
     taux = models.CharField(verbose_name="taux horaire", null=False, choices=[(choix.name, choix.value) for choix in Taux])
     cout_total = PositiveDecimalField(verbose_name="total", null=False, default=0.00, max_digits=6, decimal_places=2)
-    
-    
-    
+
