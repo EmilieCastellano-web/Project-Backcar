@@ -150,7 +150,6 @@ def create_mission_interventions(mission_interventions, erreurs):
     except Exception as e:
         logging.error(f"Error creating mission interventions: {e}")
         raise ValidationError("Erreur lors de la création des interventions", details=erreurs)
-        # TODO: gérer les erreurs ELLE NE S AFFICHE PAS COMME LES AUTRES DANS LE HTML
 
 def update_client(data, erreurs):
     """Met à jour les informations d'un client.
@@ -229,7 +228,6 @@ def update_taches(data, erreurs):
     except Exception as e:
         erreurs['mission']['error'] = str(e)
         logging.error(f"Erreur lors de la mise à jour des tâches : {e}")
-        raise
     
 def update_mission(data, erreurs):
     """Met à jour les informations d'une mission.
@@ -266,27 +264,26 @@ def update_mission_interventions(interventions_data, mission):
     Returns:
         list: Liste des objets MissionIntervention mis à jour.
     """    
-    # Récupérer les interventions actuelles avant suppression pour logs
-    current_interventions = MissionIntervention.objects.filter(mission=mission)
-    logging.info(f"update_mission_interventions - Interventions actuelles avant suppression: {[mi.intervention.id for mi in current_interventions]}")
-    
-    MissionIntervention.objects.filter(mission=mission).delete()  # reset
-    
-    updated = []
+    try: 
+        MissionIntervention.objects.filter(mission=mission).delete()  # reset
+        
+        updated = []
 
-    for mi in interventions_data:
-        mi_obj = MissionIntervention.objects.create(
-            mission=mission,
-            intervention=mi['intervention'],
-            taux=mi['taux'],
-            cout_total=mi['cout_total'],
-            duree_supplementaire=mi.get('duree_supplementaire', 0.0)  # Ajout de la durée supplémentaire
-        )
-        updated.append(mi_obj)
+        for mi in interventions_data:
+            mi_obj = MissionIntervention.objects.create(
+                mission=mission,
+                intervention=mi['intervention'],
+                taux=mi['taux'],
+                cout_total=mi['cout_total'],
+                duree_supplementaire=mi.get('duree_supplementaire', 0.0)  # Ajout de la durée supplémentaire
+            )
+            updated.append(mi_obj)
 
-    logging.info(f"{len(updated)} interventions liées à la mission recréées.")
-    logging.info(f"update_mission_interventions - Nouvelles interventions: {[mi.intervention.id for mi in updated]}")
-    return updated
+        logging.info(f"{len(updated)} interventions liées à la mission recréées.")
+        logging.info(f"update_mission_interventions - Nouvelles interventions: {[mi.intervention.id for mi in updated]}")
+        return updated
+    except Exception as e:
+        raise ValidationError(f"Erreur lors de la mise à jour des interventions : {e}")
         
 def intervention_get_by_id(intervention_id):
     """Récupère une intervention par son ID.

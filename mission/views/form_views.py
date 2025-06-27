@@ -223,7 +223,6 @@ def post_update_mission_view(request, mission_id):
 
         messages.success(request, f'Mission mise à jour avec succès!')
         return redirect('list_view')
-    #TODO : quand update mission sans intervention enregistre n bdd sans intervention dans mission_intervention;
     except ValidationError as ve:
         logging.warning(f"Validation error: {ve}")
         return render_with_error_handling(request, 'update_mission.html', {

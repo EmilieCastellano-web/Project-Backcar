@@ -237,6 +237,11 @@ def extract_data_mission(request, vehicule, client, erreurs, mission_id):
         erreurs['mission']['vehicule'] = "Le véhicule est requis"
     if not mission['client']:
         erreurs['mission']['client'] = "Le client est requis"
+    # Vérifier si le vehicule + client sont déja associés à une mission
+    if vehicule_obj.id and client_obj.id:
+        existing_missions = vehicule_obj.mission_set.filter(client=client_obj)
+        if existing_missions.exists():
+            erreurs['mission']['vehicule_client'] = "Ce véhicule est déjà associé à une mission pour ce client"
     if erreurs['mission']:
         raise ValidationError("Erreur(s) dans le formulaire", details=erreurs)
     
