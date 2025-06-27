@@ -1,7 +1,6 @@
 from datetime import datetime
 import logging
-from mission.models import Intervention, Taux, Vehicule, Client
-from django.core.validators import MinValueValidator
+from mission.models import  Taux, Vehicule, Client
 
 class ValidationError(Exception):
     def __init__(self, message, field=None, details=None):
@@ -261,7 +260,10 @@ def extract_data_mission_intervention(request, mission, interventions, erreurs):
     mission_interventions = []
     cout_total = 0.0    
     taux = request.POST.get(f'taux', '')
-    # logging.info(f"extract_data_mission_intervention - Taux reçu: '{taux}'")
+    duree_supp = float(request.POST.get('duree_supplementaire', 0.0) or 0.0)
+    duree_supp_total = duree_supp + mission.get('duree_supplementaire', 0.0)
+    logging.info(f"extract_data_mission_intervention - Taux: {taux}, Durée supplémentaire: {duree_supp}, Durée totale: {duree_supp_total}")
+
     match taux:
         case 'HORAIRE':
             taux_calcul = 1.0
@@ -274,9 +276,6 @@ def extract_data_mission_intervention(request, mission, interventions, erreurs):
     
     for intervention in interventions['interventions']:
         try:
-            duree_supp = float(request.POST.get(f'duree_supplementaire', 0.0))
-            duree_supp_total = duree_supp + float(intervention.duree_supplementaire or 0.0)  # Ajout de la durée supplémentaire de l'intervention existante
-            logging.info(f"Intervention ID: {intervention.id}, Durée Supplémentaire: {duree_supp}, Durée Totale: {duree_supp_total}")        
             if intervention.is_forfait:
                 cout = float(intervention.forfait)
             else:
@@ -285,7 +284,6 @@ def extract_data_mission_intervention(request, mission, interventions, erreurs):
                 cout *= duree_supp or 1.0
                 
             cout_total += cout
-            
             mission_intervention = {
                 'mission': mission,
                 'intervention': intervention,

@@ -94,7 +94,6 @@ def list_view(request):
             'libelle': mi.intervention.libelle,
             'prix_unitaire': mi.intervention.prix_unitaire,
         })
-        missions_group[mission_id]['cout_total'] += mi.cout_total
         
         
     missions = list(missions_group.values())

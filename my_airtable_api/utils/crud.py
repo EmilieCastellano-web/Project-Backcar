@@ -94,7 +94,8 @@ def create_taches(mission_interventions, client, vehicule):
                     'mission': mission,
                     'intervention': mi['intervention'],
                     'taux': mi['taux'],
-                    'cout_total': mi['cout_total']
+                    'cout_total': mi['cout_total'],
+                    'duree_supplementaire': mi.get('duree_supplementaire', 0.0)  # Ajout de la durée supplémentaire
                 }
                 mission_intervention_list.append(mi_data)
 
@@ -277,7 +278,8 @@ def update_mission_interventions(interventions_data, mission):
             mission=mission,
             intervention=mi['intervention'],
             taux=mi['taux'],
-            cout_total=mi['cout_total']
+            cout_total=mi['cout_total'],
+            duree_supplementaire=mi.get('duree_supplementaire', 0.0)  # Ajout de la durée supplémentaire
         )
         updated.append(mi_obj)
 
