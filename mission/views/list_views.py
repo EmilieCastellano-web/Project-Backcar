@@ -98,7 +98,6 @@ def list_view(request):
         
     missions = list(missions_group.values())
     
-    
     # Récupération de la table Véhicule avec les relations nécessaires
     vehicules = Vehicule.objects.all().order_by('marque', 'modele')
     vehicules_group = {}
@@ -132,6 +131,7 @@ def list_view(request):
                     ]
                 })
     vehicules = list(vehicules_group.values())  
+    
     # Récupération de la table Client
     clients = Client.objects.all().order_by('nom', 'prenom')
     clients_group = {}
@@ -194,6 +194,7 @@ def show_mission_view(request, mission_id):
             'error_type': 'template_render_error'
         })
 
+    # Convertir les objets en dictionnaires pour le rendu
     client =  model_to_dict(mission.client)
     vehicule = model_to_dict(mission.vehicule)
     mission_intervention =  get_all_mission_intervention_by_id(mission_id)

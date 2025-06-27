@@ -19,11 +19,11 @@
             <label for="nom">Nom:</label>
             <input type="text" id="nom" name="nom" value="{{ mission.client.nom|default_if_none:'' }}">
             <label for="prenom">Prénom:</label>
-            <input type="text" id="prenom" name="prenom" value="{{ mission.client.prenom|default_if_none:'' }}">
+            <input type="text" id="prenom" name="prenom" value="{{ mission.client.prenom|default_if_none:'' }}" disabled>
             <label for="societe">Société:</label>
             <input type="text" id="societe" name="societe" value="{{ mission.client.societe|default_if_none:'' }}">
             <label for="email">Email:</label>
-            <input type="email" id="email" name="email" value="{{ mission.client.email|default_if_none:'' }}">
+            <input type="email" id="email" name="email" value="{{ mission.client.email|default_if_none:'' }}" disabled>
             <label for="telephone">Téléphone:</label>
             <input type="text" id="telephone" name="telephone" value="{{ mission.client.telephone|default_if_none:'' }}">
             <label for="adresse">Adresse:</label>
@@ -40,8 +40,22 @@
                 {% endfor %}
             {% endif %}  
 
+            <label for="marque">Marque:</label>
+            <input type="text" id="marque" name="marque" value="{{ mission.vehicule.marque|default_if_none:'' }}" disabled>
+            <label for="modele">Modèle:</label>
+            <input type="text" id="modele" name="modele" value="{{ mission.vehicule.modele|default_if_none:'' }}" disabled>
+            <label for="numero_serie">Numéro de Série:</label>
+            <input type="text" id="numero_serie" name="numero_serie" value="{{ mission.vehicule.numero_serie|default_if_none:'' }}" disabled>
+            <label for="immatriculation">Immatriculation:</label>
+            <input type="text" id="immatriculation" name="immatriculation" value="{{ mission.vehicule.immatriculation|default_if_none:'' }}" disabled>
+            <label for="mise_circulation">Mise en Circulation:</label>
+            <input type="text" id="mise_circulation" name="mise_circulation" value="{{ mission.vehicule.mise_circulation|date:"d/m/Y"|default_if_none:'' }}" disabled>
             <label for="kilometrage">Kilométrage:</label>
             <input type="number" id="kilometrage" name="kilometrage" value="{{ mission.vehicule.kilometrage|default:0.0}}">       
+            <label for="boite_vitesse">Boîte de Vitesse:</label>
+            <input type="text" id="boite_vitesse" name="boite_vitesse" value="{{ mission.vehicule.boite_vitesse|default_if_none:'' }}"disabled>
+            <label for="carburant">Carburant:</label>
+            <input type="text" id="carburant" name="carburant" value="{{ mission.vehicule.carburant|default_if_none:'' }}"disabled>
             <label for="remarque _vehicule">Remarque:</label>
             <textarea id="remarque_vehicule" name="remarque_vehicule" rows="4" cols="50">{{mission.vehicule.remarque|default:"Non Renseigné"}}</textarea>        
             <label for="vo">Véhicule d'Occasion:</label>

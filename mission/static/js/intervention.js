@@ -107,8 +107,6 @@ document.addEventListener('DOMContentLoaded', function() {
 function toggleForfaitInput(isForfait) {
     const forfaitInput = document.getElementById('id_forfait');
     const prixInput = document.getElementById('id_prix_unitaire');
-    console.log('toggleForfaitInput called with isForfait:', isForfait);
-    console.log('Forfait input element:', forfaitInput);
     if (forfaitInput) {
         if (isForfait) {
             forfaitInput.disabled = false;
@@ -125,7 +123,6 @@ function toggleForfaitInput(isForfait) {
 document.addEventListener('DOMContentLoaded', function() {
     // Gestion des cases à cocher pour les interventions forfaitaires
     const forfaitCheckInput = document.getElementById('id_is_forfait');
-    console.log('Forfait check input element:', forfaitCheckInput);
     if (forfaitCheckInput) {
         forfaitCheckInput.addEventListener('change', function() {
             const isForfait = this.checked;
